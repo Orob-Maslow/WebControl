@@ -1,6 +1,5 @@
 from DataStructures.makesmithInitFuncs import MakesmithInitFuncs
 from DataStructures.data import Data
-#from collections import queue
 import cwiid
 import time
 
@@ -27,7 +26,7 @@ class WiiPendantThread(MakesmithInitFuncs):
     self.StartTiime = time.time()
     self.HOME = 0
     self.A = 0
-    self.setUpData
+    self.wm = None
 
  def rumble(self,mode=0):
   '''
@@ -36,65 +35,63 @@ class WiiPendantThread(MakesmithInitFuncs):
   '''
   if mode == 0: # start up heartbeat = 2 quick rumbles / prompt for confirmation
     self.wm.rumble=True
-    time.sleep(.3)
+    time.sleep(.2)
     self.wm.rumble = False
-    time.sleep(0.2)
+    time.sleep(0.1)
     self.wm.rumble=True
-    time.sleep(.3)
+    time.sleep(.2)
     self.wm.rumble = False
 
   if mode == 1: # shutdown or timeout
     self.wm.rumble=True
-    time.sleep(.2)
+    time.sleep(.1)
     self.wm.rumble = False
-    time.sleep(0.2)
+    time.sleep(0.1)
     self.wm.rumble=True
-    time.sleep(.6)
+    time.sleep(.3)
     self.wm.rumble = False
 
   if mode == 2: # sled home reset
     self.wm.rumble=True
-    time.sleep(.6)
+    time.sleep(.3)
     self.wm.rumble = False
-    time.sleep(0.2)
+    time.sleep(0.1)
     self.wm.rumble=True
-    time.sleep(.2)
+    time.sleep(.1)
     self.wm.rumble = False
 
   if mode >= 30: # Z-axis zero
     self.wm.rumble=True
-    time.sleep(.8)
+    time.sleep(.4)
     self.wm.rumble = False
 
 #end rumble
 
- def read_buttons(self, data):
+ def read_buttons(self):
   
   while True:
-    time.sleep(0.01)
+    time.sleep(0.05)
+    self.data.wiiPendantPresent = self.data.config.getValue("Maslow Settings", "wiiPendantPresent")
     if self.data.wiiPendantPresent == False:
+          print("wii thread running, but user has disabled option")
           self.data.wiiPendantConnected = False
           break
-    if self.wm == None: 
-        #i=2
+    if self.wm == None:
+      print("Establishing wii mote connectiond")
       while not self.wm:
         try:
           self.wm=cwiid.Wiimote()
-          wm.rpt_mode = cwiiid.RPT_BTN
-          #          self.wm.led.battery = 1  # this should show the battery power with the LED's when it connects...
-          #  return(True)
+          self.wm.rpt_mode = cwiid.RPT_BTN
+          self.rumble(0)
+          self.data.wiiPendantConnected = True
+          self.wm.led = self.L[self.LED_ON]
         except RuntimeError:
           '''
             this is a silent fail if the wiimote is not there... should set something to know that it  isn't there$
           '''
           self.data.wiiPendantConnected = False
           self.wm = None
-          break
-          #  if (i>10):
-          #    return(false)
-          #  print ("Error opening wiimote connection" )
-          #  print ("attempt " + str(i))
-          #  i += 1
+          return # closes the thread?
     else:
       #  not using classic, this is if the remote is standing up though you hold it sideways
       if self.CONFIRM > 0:
@@ -215,13 +212,6 @@ class WiiPendantThread(MakesmithInitFuncs):
           self.wm.led = self.L[self.LED_ON]
       else:
         self.PLUS = 0
+  return
   thread.exit()
-  
-  #def main():
-  #    self.read_buttons()  
-  
-  #if__name__== "__main__":
-  #      main() 
-  
-  #end button scan
 #END class
