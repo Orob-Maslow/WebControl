@@ -1,3 +1,4 @@
+
 from DataStructures.makesmithInitFuncs import MakesmithInitFuncs
 from Connection.wiiPendantThread import WiiPendantThread
 import schedule
@@ -9,8 +10,8 @@ import time
 class WiiPendant(MakesmithInitFuncs):
  '''
     This class will start the communication thread for the wiimote Bluetooth connection
-    This class relies on the setpoints in the /etc/cwiid/wminput/ folder of files that has the names of the input fields sent by the wiimote
-    'BTN_1', 'BTN_2', 'BTN_A', 'BTN_B', 'BTN_DOWN', 'BTN_HOME', 'BTN_LEFT', 'BTN_MINUS', 'BTN_PLUS', 'BTN_RIGHT', 'BTN_UP', etc.
+    This class relies on the setpoints in the /etc/cwiid/wminput/ folder of files that has the names of the input fi$
+    'BTN_1', 'BTN_2', 'BTN_A', 'BTN_B', 'BTN_DOWN', 'BTN_HOME', 'BTN_LEFT', 'BTN_MINUS', 'BTN_PLUS', 'BTN_RIGHT', 'B$
     It also requires that the connection script with the specific bluetooth ID of the wiimote be in /home/pi/bin/
     to get the ID:
       push 1&2 buttons on wiimote
@@ -21,7 +22,7 @@ class WiiPendant(MakesmithInitFuncs):
  wm = None
  debug = True
  th = None
- 
+
  def setup(self):
     """
        try every 5 seconds to connect if the wiimote is an option
@@ -58,10 +59,9 @@ class WiiPendant(MakesmithInitFuncs):
                      self.th = threading.Thread(target=x.read_buttons)
                      self.th.daemon = True
                      self.th.start()
-
             except RuntimeError:
                      '''
-                     this is a silent fail if the wiimote is not there... should set something to know that it  isn't there$
+                     this is a silent fail if the wiimote is not there... should set something to know that it  isn'$
                      '''
                      print ("controller not found, press 1+2 to start connection")
       else:
@@ -69,11 +69,12 @@ class WiiPendant(MakesmithInitFuncs):
     else:
         if self.th != None:
                 self.th.join()
-          
+
  def closeConnection(self):
         '''
            tell wiiPendant to shut down
         '''
+        
         self.wiiPendantRequest = "requestToClose"
 
  def getConnectionStatus(self):

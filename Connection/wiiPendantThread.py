@@ -71,12 +71,12 @@ class WiiPendantThread(MakesmithInitFuncs):
   
   while True:
     time.sleep(0.05)
-    self.data.wiiPendantPresent = self.data.config.getValue("Maslow Settings", "wiiPendantPresent")
+    #self.data.wiiPendantPresent = self.data.config.getValue("Maslow Settings", "wiiPendantPresent")
     if self.data.wiiPendantPresent == False:
           print("wii thread running, but user has disabled option")
           self.data.wiiPendantConnected = False
-          break
-    if self.wm == None:
+          return
+    if self.data.wiiPendantConnected == False and self.wm == None:
       print("Establishing wii mote connectiond")
       while not self.wm:
         try:
