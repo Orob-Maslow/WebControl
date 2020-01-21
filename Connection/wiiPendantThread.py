@@ -1,5 +1,6 @@
 from DataStructures.makesmithInitFuncs import MakesmithInitFuncs
 from DataStructures.data import Data
+from Actions import actions
 import cwiid
 import time
 
@@ -70,17 +71,26 @@ class WiiPendantThread(MakesmithInitFuncs):
  def read_buttons(self):
   
   while True:
-    time.sleep(0.05)
+    time.sleep(0.2)
     #self.data.wiiPendantPresent = self.data.config.getValue("Maslow Settings", "wiiPendantPresent")
     if self.data.wiiPendantPresent == False:
-          print("wii thread running, but user has disabled option")
+          print("wii thread running, but user has disabled option, returning")
           self.data.wiiPendantConnected = False
+          self.wm = None
           return
+    if self.data.wiiPendantConnected == True and self.wm == None:
+          self.data.wiiPendantConnected = False
+          print("check wiimote battery - connection lost")
+          return
+    elif self.data.wiiPendantConnected == False and self.wm != None:
+          self.wm = None
+          print("connection reset")
     if self.data.wiiPendantConnected == False and self.wm == None:
-      print("Establishing wii mote connectiond")
+      #print("Establishing wii mote connection")
       while not self.wm:
         try:
           self.wm=cwiid.Wiimote()
+          print("wiimote connection established")
           self.wm.rpt_mode = cwiid.RPT_BTN
           self.rumble(0)
           self.data.wiiPendantConnected = True
@@ -104,15 +114,17 @@ class WiiPendantThread(MakesmithInitFuncs):
         if self.TRIGGER == 1:
           if self.CONFIRM > 0:
             self.TRIGGER = 0
-            print("HOME POSITION CONFIRMED")
+            print("Sled HOME POSITION CONFIRMED")
             self.rumble(1)
-            self.data.ui_queue1.put("defineHome")
+            self.data.actions.defineHome()
+            #self.data.ui_queue1.put("defineHome","nowhwere", self.DISTANCE[self.LED_ON])
         elif self.ZTRIGGER == 1:
           self.ZTRIGGER = 0
           if self.CONFIRM > 0:
             print("Z PLUNGE RESET CONFIRMED")
             self.rumble(2)
-            self.data.ui_queue1.put("defineZ0")
+            self.data.actions.defineZ0()
+            #self.data.ui_queue1.put("defineZ0","nowhwere", self.DISTANCE[self.LED_ON])
         else:
           self.A = 1
       else:
@@ -121,34 +133,34 @@ class WiiPendantThread(MakesmithInitFuncs):
       if (self.wm.state['buttons'] & cwiid.BTN_1):
         if self.TRIGGER == 0:
           if (self.wm.state['buttons'] & cwiid.BTN_UP):
-            print("MOVE LEFT")
+            print("Pendant Sled MOVE LEFT ", self.DISTANCE[self.LED_ON])
             self.rumble(1)
             self.TRIGGER = 1
-            self.move_sled("-X",self.DISTANCE[self.LED_ON])
-            self.data.ui_queue1.put("move", "left", self.DISTANCE[self.LED_ON])
+            self.data.actions.move("left",self.DISTANCE[self.LED_ON])
+            #self.data.ui_queue1.put("move", "left", self.DISTANCE[self.LED_ON])
           if (self.wm.state['buttons'] & cwiid.BTN_DOWN):
-            print("MOVE RIGHT")
+            print("Pendant Sled MOVE RIGHT ", self.DISTANCE[self.LED_ON])
             self.rumble(1)
             self.TRIGGER = 1
             self.RIGHT = 0
-            self.move_sled("X",self.DISTANCE[self.LED_ON])
-            self.data.ui_queue1.put("move", "right", self.DISTANCE[self.LED_ON])
+            self.data.actions.move("right",self.DISTANCE[self.LED_ON])
+            #self.data.ui_queue1.put("move", "right", self.DISTANCE[self.LED_ON])
           if (self.wm.state['buttons'] & cwiid.BTN_RIGHT):
-            print("MOVE UP")
+            print("Pendant Sled MOVE UP ", self.DISTANCE[self.LED_ON])
             self.rumble(1)
             self.TRIGGER = 1
             self.UP = 0
-            self.move_sled("Y",self.DISTANCE[self.LED_ON])
-            self.data.ui_queue1.put("move", "up", self.DISTANCE[self.LED_ON])
+            self.data.actions.move("up",self.DISTANCE[self.LED_ON])
+            #self.data.ui_queue1.put("move", "up", self.DISTANCE[self.LED_ON])
           if (self.wm.state['buttons'] & cwiid.BTN_LEFT):
-            print("MOVE DOWN")
+            print("Pendant Sled MOVE DOWN ", self.DISTANCE[self.LED_ON] )
             self.rumble(1)
             self.TRIGGER = 1
             self.DOWN = 0
-            self.move_sled("-Y",self.DISTANCE[self.LED_ON])
-            self.data.ui_queue1.put("move", "down", self.DISTANCE[self.LED_ON])
+            self.data.actions.move("down",self.DISTANCE[self.LED_ON])
+            #self.data.ui_queue1.put("move", "down", self.DISTANCE[self.LED_ON])
           if (self.wm.state['buttons'] & cwiid.BTN_HOME):
-            print("SET NEW HOME")
+            print("Pendant Sled SET NEW HOME")
             self.rumble(1)
             self.TRIGGER = 1
             self.rumble(0)
@@ -161,19 +173,19 @@ class WiiPendantThread(MakesmithInitFuncs):
         if self.ZTRIGGER == 0:
           self.TRIGGER = 0
           if (self.wm.state['buttons'] & cwiid.BTN_RIGHT):
-            print("MOVE Z UP")
+            print("Pendant MOVE Z UP ", self.Z[self.LED_ON])
             self.rumble(2)
             self.ZTRIGGER = 1
-            self.move_z("Z",self.Z[self.LED_ON])
-            self.data.ui_queue1.put("moveZ", "left", self.DISTANCE[self.LED_ON])
+            self.data.actions.moveZ("raise",self.Z[self.LED_ON])
+            #self.data.ui_queue1.put("moveZ", "left", self.DISTANCE[self.LED_ON])
           if (self.wm.state['buttons'] & cwiid.BTN_LEFT):
-            print("MOVE Z DOWN")
+            print("Pendant MOVE Z DOWN ", self.Z[self.LED_ON])
             self.rumble(2)
             self.ZTRIGGER = 1
-            self.move_z("-Z",self.Z[self.LED_ON])
-            self.data.ui_queue1.put("move", "left", self.DISTANCE[self.LED_ON])
+            self.data.actions.moveZ("lower",self.Z[self.LED_ON])
+            #self.data.ui_queue1.put("move", "left", self.DISTANCE[self.LED_ON])
           if (self.wm.state['buttons'] & cwiid.BTN_HOME):
-            print("SET PLUNGE to 0")
+            print("Pendant SET Z to 0")
             self.rumble(2)
             self.ZTRIGGER = 1
             self.rumble(0)
@@ -184,8 +196,9 @@ class WiiPendantThread(MakesmithInitFuncs):
         if (self.wm.state['buttons'] & cwiid.BTN_HOME):
           if self.HOME == 0:
             self.HOME = 1
-            print ("MOVE TO HOME")
+            print ("Pendant Sled MOVE TO HOME")
             self.rumble(1)
+            self.data.actions.home()
         else:
           self.HOME = 0
 
@@ -195,7 +208,7 @@ class WiiPendantThread(MakesmithInitFuncs):
           self.LED_ON = self.LED_ON - 1
           if self.LED_ON < 0:
             self.LED_ON = 3
-          print("Move Distance is ", self.DISTANCE[self.LED_ON])
+          print("Sled Move Distance is ", self.DISTANCE[self.LED_ON])
           print("Z Distance is ", self.Z[self.LED_ON])
           self.wm.led = self.L[self.LED_ON]
       else:
@@ -207,11 +220,13 @@ class WiiPendantThread(MakesmithInitFuncs):
           self.LED_ON = self.LED_ON + 1
           if self.LED_ON > 3:
             self.LED_ON = 0
-          print("Move Distance is ", self.DISTANCE[self.LED_ON])
+          print("Sled Move Distance is ", self.DISTANCE[self.LED_ON])
           print("Z Distance is ", self.Z[self.LED_ON])
           self.wm.led = self.L[self.LED_ON]
       else:
         self.PLUS = 0
   return
+  if self.debug:
+        print("thread is dead")
   thread.exit()
 #END class

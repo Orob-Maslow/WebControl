@@ -13,6 +13,7 @@ import zipfile
 import threading
 from gpiozero.pins.mock import MockFactory
 from gpiozero import Device
+from subprocess import check_call
 
 '''
 This class does most of the heavy lifting in processing messages from the UI client.
@@ -289,8 +290,10 @@ class Actions(MakesmithInitFuncs):
         except Exception as e:
             self.data.console_queue.put(str(e))
             return False
-
-    def defineHome(self, posX, posY):
+    def shutdown(self):
+        check_call(['sudo', 'poweroff'])
+        
+    def defineHome(self, posX = "", posY = ""):
         '''
         Redefines the home location and sends message to update the UI client.  In a break from ground control, this
         does not alter the gcode.  Gcode is altered by the home location only when sent to the controller.

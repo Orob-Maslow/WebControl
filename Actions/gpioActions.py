@@ -1,7 +1,7 @@
 from DataStructures.makesmithInitFuncs import MakesmithInitFuncs
 from gpiozero.pins.mock import MockFactory
-from gpiozero import Device, Button, LED
-
+from gpiozero import Device, Button, LED, LEDBoard
+from subprocess import check_call
 
 class GPIOActions(MakesmithInitFuncs):
 
@@ -19,38 +19,53 @@ class GPIOActions(MakesmithInitFuncs):
         setValues = self.data.config.getJSONSettingSection("GPIO Settings")
         #print(setValues)
         for setting in setValues:
+            print(setting)
             if setting["value"] != "":
                 pinNumber = int(setting["key"][4:])
                 self.setGPIOAction(pinNumber, setting["value"])
+                #{'default': '', 'desc': 'GPIO16 function ality\ndefault setting: ', 
+                # 'key': 'gpio16', 'section': 'GPIO Settings', 'title':  'GPIO16',  
+                # 'type': 'options', 'value': 'Play'},
 
     def setGPIOAction(self,pin, action):
         # first remove pin assignments if already made
         foundButton = None
+#        print(self.Buttons[:])
         for button in self.Buttons:
+            #print(button)
             if button.pin.number == pin:
                 button.pin.close()
                 foundButton = button
                 break
         if foundButton is not None:
-            self.Buttons.remove(foundButton)
+            print(button.pin)
+            self.Buttons.remove(foundButton)  # if the object is populated, why remove it?
+        #print(Buttons)
 
         foundLED = None
+#        print(self.LEDs[:])
         for led in self.LEDs:
-            if led.pin.number == pin:
-                led.pin.close()
+            if led[1].pin.number == pin:
+                led[1].pin.close()
                 foundLED = led
                 break
         if foundLED is not None:
-            self.LEDs.remove(foundLED)
+            self.LEDs.remove(foundLED)    
+         #   if led.pin.number == pin:
+          #      led.pin.close()
+           #     foundLED = led
+            #    break
+        #if foundLED is not None:
+         #   self.LEDs.remove(foundLED)
 
         type, pinAction = self.getAction(action)
         if type == "button":
             button = Button(pin)
             button.when_pressed = pinAction
             self.Buttons.append(button)
-            print("set Button with action: "+action)
-            if type == "led":
-                _led = LED(pin)
+            print("set Button with action: "+ action)
+        elif type == "led":
+            _led = LED(pin)
             led = (action,_led)
             self.LEDs.append(led)
             print("set LED with action: " + action)
@@ -62,6 +77,8 @@ class GPIOActions(MakesmithInitFuncs):
             return "button", self.data.actions.pauseRun
         if action == "Play":
             return "button", self.data.actions.startRun
+        if action == "Shutdown":
+            return "button", self.data.actions.shutDown
         else:
             return "led", None
     

@@ -97,7 +97,7 @@ class Data:
     inPIDPositionTest = False
     PIDVelocityTestVersion = 0
     PIDPositionTestVersion = 0
-    wiiPendantPresent = False # has user set wiimote as active?
+    wiiPendantPresent = True # has user set wiimote as active?
     wiiPendantConnected = False # is the wiimote BT connected?
 
     """

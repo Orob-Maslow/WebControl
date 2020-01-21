@@ -31,6 +31,7 @@ class WiiPendant(MakesmithInitFuncs):
     if self.debug:
        print("scheduling connection attempt every 10 seconds")
     schedule.every(10).seconds.do(self.openConnection)
+    self.data.wiiPendantConnected = False
 
  def connect(self, *args):
     """
@@ -46,27 +47,28 @@ class WiiPendant(MakesmithInitFuncs):
        if not connected, then set t
     '''
     self.data.wiiPendantPresent = self.data.config.getValue("Maslow Settings", "wiiPendantPresent")
-    if self.data.wiiPendantPresent:
+    if not self.data.wiiPendantConnected:
+     if self.data.wiiPendantPresent:
       if self.debug:
             print("Wii Pendant Selected")
             if self.debug:
                   print("Press 1+2 to Connect Wii controller")
             if self.th == None:
-                   print("Starting Thread")
-            try:
+               print("Starting Thread")
+               try:
                      x = WiiPendantThread()
                      x.data = self.data
                      self.th = threading.Thread(target=x.read_buttons)
                      self.th.daemon = True
                      self.th.start()
-            except RuntimeError:
+               except RuntimeError:
                      '''
                      this is a silent fail if the wiimote is not there... should set something to know that it  isn'$
                      '''
                      print ("controller not found, press 1+2 to start connection")
       else:
             self.data.ui_queue1.put("Action", "connectionStatus",{'status': 'True'})
-    else:
+     else:
         if self.th != None:
                 self.th.join()
 
@@ -74,7 +76,6 @@ class WiiPendant(MakesmithInitFuncs):
         '''
            tell wiiPendant to shut down
         '''
-        
         self.wiiPendantRequest = "requestToClose"
 
  def getConnectionStatus(self):
