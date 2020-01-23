@@ -99,7 +99,7 @@ class Data:
     PIDPositionTestVersion = 0
     wiiPendantPresent = True # has user set wiimote as active?
     wiiPendantConnected = False # is the wiimote BT connected?
-
+    wiiThreadAlive = False # is the thread running?
     """
     Pointers to Objects
     """

@@ -69,22 +69,20 @@ class WiiPendantThread(MakesmithInitFuncs):
 #end rumble
 
  def read_buttons(self):
-  
-  while True:
+  try:
+   while True:
     time.sleep(0.2)
     #self.data.wiiPendantPresent = self.data.config.getValue("Maslow Settings", "wiiPendantPresent")
     if self.data.wiiPendantPresent == False:
-          print("wii thread running, but user has disabled option, returning")
+          print("wii thread running, but user has disabled option, Thread alive")
           self.data.wiiPendantConnected = False
           self.wm = None
-          return
     if self.data.wiiPendantConnected == True and self.wm == None:
           self.data.wiiPendantConnected = False
-          print("check wiimote battery - connection lost")
-          return
+          print("check wiimote battery - connection lost, thread alive")
     elif self.data.wiiPendantConnected == False and self.wm != None:
           self.wm = None
-          print("connection reset")
+          print("connection reset, thread alive")
     if self.data.wiiPendantConnected == False and self.wm == None:
       #print("Establishing wii mote connection")
       while not self.wm:
@@ -99,9 +97,10 @@ class WiiPendantThread(MakesmithInitFuncs):
           '''
             this is a silent fail if the wiimote is not there... should set something to know that it  isn't there$
           '''
+          print("Connection Failed, thread should die")
           self.data.wiiPendantConnected = False
           self.wm = None
-          return # closes the thread?
+          break # does not close the thread?
     else:
       #  not using classic, this is if the remote is standing up though you hold it sideways
       if self.CONFIRM > 0:
@@ -125,6 +124,9 @@ class WiiPendantThread(MakesmithInitFuncs):
             self.rumble(2)
             self.data.actions.defineZ0()
             #self.data.ui_queue1.put("defineZ0","nowhwere", self.DISTANCE[self.LED_ON])
+        elif (self.wm.state['buttons'] & cwiid.BTN_B):
+              print("Wii Remote Disconnect - thread dead")
+              self.data.wiiPendantConnected = False
         else:
           self.A = 1
       else:
@@ -225,8 +227,14 @@ class WiiPendantThread(MakesmithInitFuncs):
           self.wm.led = self.L[self.LED_ON]
       else:
         self.PLUS = 0
-  return
-  if self.debug:
-        print("thread is dead")
-  thread.exit()
+      #end if
+    #end if not connected
+   #end while
+  except RuntimeError:
+      '''
+          this is a silent fail if the wiimote is not there... should set something to know that it  isn'$
+      '''
+      print (" error, connection dropped, thread dead")
+      self.wm = None
+      self.data.wiiThreadAlive = False               
 #END class

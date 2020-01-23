@@ -53,22 +53,25 @@ class WiiPendant(MakesmithInitFuncs):
             print("Wii Pendant Selected")
             if self.debug:
                   print("Press 1+2 to Connect Wii controller")
-            if self.th == None:
+            if self.data.wiiThreadAlive == False:
+               self.th = None
                print("Starting Thread")
                try:
                      x = WiiPendantThread()
                      x.data = self.data
                      self.th = threading.Thread(target=x.read_buttons)
                      self.th.daemon = True
+                     self.data.wiiThreadAlive = True
                      self.th.start()
                except RuntimeError:
                      '''
                      this is a silent fail if the wiimote is not there... should set something to know that it  isn'$
                      '''
                      print ("controller not found, press 1+2 to start connection")
+                     self.data.wiiThreadAlive = False
       else:
             self.data.ui_queue1.put("Action", "connectionStatus",{'status': 'True'})
-     else:
+    else:
         if self.th != None:
                 self.th.join()
 
