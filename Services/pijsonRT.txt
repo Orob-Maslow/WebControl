@@ -16,7 +16,7 @@
             "section": "Advanced Settings",
             "title": "Max Touch Z-axis Plunge",
             "type": "string",
-            "value": "10"
+            "value": "0.0"
         },
         {
             "default": 8113.73,
@@ -49,32 +49,32 @@
         {
             "default": 0,
             "desc": "The tolerance adjustment for the left chain length, in percent\ndefault setting: 0",
+            "firmwareKey": 40,
             "key": "leftChainTolerance",
             "section": "Advanced Settings",
             "title": "Chain Tolerance, Left Chain",
             "type": "string",
-            "value": "0",
-            "firmwareKey": 40
+            "value": "0"
         },
         {
             "default": 0,
             "desc": "The tolerance adjustment for the right chain length, in percent\ndefault setting: 0",
+            "firmwareKey": 41,
             "key": "rightChainTolerance",
             "section": "Advanced Settings",
             "title": "Chain Tolerance, Right Chain",
             "type": "string",
-            "value": "0",
-            "firmwareKey": 41
+            "value": "0"
         },
         {
-            "default": 5.1685e-6,
+            "default": 5.1685e-06,
             "desc": "Elasticity of the Chain [mm/mm/N]\ndefault setting: 5.1685e-6",
+            "firmwareKey": 45,
             "key": "chainElasticity",
             "section": "Advanced Settings",
             "title": "Chain Elasticity",
             "type": "float",
-            "value": 5.1685e-6,
-            "firmwareKey": 45
+            "value": 5.1685e-06
         },
         {
             "default": "Top",
@@ -97,7 +97,7 @@
             "section": "Advanced Settings",
             "title": "Extend Chain Distance",
             "type": "string",
-            "value": "1651"
+            "value": "1650"
         },
         {
             "default": 3360,
@@ -152,7 +152,7 @@
             "section": "Advanced Settings",
             "title": "Home Position X Coordinate",
             "type": "string",
-            "value": "0.0"
+            "value": "-224.4395"
         },
         {
             "default": 0.0,
@@ -161,7 +161,7 @@
             "section": "Advanced Settings",
             "title": "Home Position Y Coordinate",
             "type": "string",
-            "value": "0.0"
+            "value": "105.6767"
         },
         {
             "default": 0,
@@ -170,7 +170,7 @@
             "section": "Advanced Settings",
             "title": "Truncate Floating Point Numbers",
             "type": "bool",
-            "value": 0
+            "value": 1
         },
         {
             "default": 4,
@@ -179,7 +179,7 @@
             "section": "Advanced Settings",
             "title": "Floating Point Precision",
             "type": "string",
-            "value": "4"
+            "value": "3"
         },
         {
             "default": "Triangular",
@@ -202,7 +202,7 @@
             "section": "Advanced Settings",
             "title": "Rotation Radius for Triangular Kinematics",
             "type": "string",
-            "value": "139.1"
+            "value": "135.5"
         },
         {
             "default": 0,
@@ -212,7 +212,7 @@
             "section": "Advanced Settings",
             "title": "Chain Sag Correction Value for Triangular Kinematics",
             "type": "string",
-            "value": "33"
+            "value": "13.766099"
         },
         {
             "default": 0,
@@ -403,14 +403,47 @@
             "value": "490Hz"
         },
         {
-            "default": 20,
+            "default": 2.0,
             "desc": "If the position of the sled varies from the expected position by more than this amount, cutting wil be stopped. Program must be restarted to take effect.\ndefault setting: 2.0",
             "firmwareKey": 42,
             "key": "positionErrorLimit",
             "section": "Advanced Settings",
             "title": "Position Error Limit",
             "type": "string",
-            "value": "20"
+            "value": "15"
+        }
+    ],
+    "Camera Settings": [
+        {
+            "default": "640x480",
+            "desc": "Size of video image.  Affects FPS and computational needs\ndefault setting: 640x480",
+            "key": "videoSize",
+            "options": [
+                "640x480",
+                "1024x768"
+            ],
+            "section": "Camera Settings",
+            "title": "Video Image Size",
+            "type": "options",
+            "value": "640x480"
+        },
+        {
+            "default": 5,
+            "desc": "Number of frames per second the camera captures\ndefault setting: 5",
+            "key": "fps",
+            "section": "Camera Settings",
+            "title": "fps",
+            "type": "float",
+            "value": 5
+        },
+        {
+            "default": 0.001,
+            "desc": "Sleep time (seconds) during camera thread.  This is here to help us tweak the camera process\ndefault setting: 0.001",
+            "key": "cameraSleep",
+            "section": "Camera Settings",
+            "title": "Camera Thread Sleep Interval",
+            "type": "float",
+            "value": 0.001
         }
     ],
     "Computed Settings": [
@@ -532,25 +565,25 @@
             "default": 0.1,
             "key": "distToMoveZ",
             "type": "float",
-            "value": 0.1
+            "value": 2.0
         },
         {
             "default": "INCHES",
             "key": "units",
             "type": "string",
-            "value": "INCHES"
+            "value": "MM"
         },
         {
             "default": 0.02,
             "key": "tolerance",
             "type": "float",
-            "value": 0.02
+            "value": 0.5
         },
         {
             "default": "INCHES",
             "key": "unitsZ",
             "type": "string",
-            "value": "INCHES"
+            "value": "MM"
         },
         {
             "default": ".",
@@ -565,6 +598,242 @@
             "value": "."
         }
     ],
+    "GPIO Settings": [
+        {
+            "default": "",
+            "desc": "GPIO2 functionality\ndefault setting: ",
+            "key": "gpio2",
+            "section": "GPIO Settings",
+            "title": "GPIO2",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO3 functionality\ndefault setting: ",
+            "key": "gpio3",
+            "section": "GPIO Settings",
+            "title": "GPIO3",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO4 functionality\ndefault setting: ",
+            "key": "gpio4",
+            "section": "GPIO Settings",
+            "title": "GPIO4",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO5 functionality\ndefault setting: ",
+            "key": "gpio5",
+            "section": "GPIO Settings",
+            "title": "GPIO5",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO6 functionality\ndefault setting: ",
+            "key": "gpio6",
+            "section": "GPIO Settings",
+            "title": "GPIO6",
+            "type": "options",
+            "value": "Pendant"
+        },
+        {
+            "default": "",
+            "desc": "GPIO7 functionality\ndefault setting: ",
+            "key": "gpio7",
+            "section": "GPIO Settings",
+            "title": "GPIO7",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO8 functionality\ndefault setting: ",
+            "key": "gpio8",
+            "section": "GPIO Settings",
+            "title": "GPIO8",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO9 functionality\ndefault setting: ",
+            "key": "gpio9",
+            "section": "GPIO Settings",
+            "title": "GPIO9",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO10 functionality\ndefault setting: ",
+            "key": "gpio10",
+            "section": "GPIO Settings",
+            "title": "GPIO10",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO11 functionality\ndefault setting: ",
+            "key": "gpio11",
+            "section": "GPIO Settings",
+            "title": "GPIO11",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO12 functionality\ndefault setting: ",
+            "key": "gpio12",
+            "section": "GPIO Settings",
+            "title": "GPIO12",
+            "type": "options",
+            "value": "Shutdown"
+        },
+        {
+            "default": "",
+            "desc": "GPIO13 functionality\ndefault setting: ",
+            "key": "gpio13",
+            "section": "GPIO Settings",
+            "title": "GPIO13",
+            "type": "options",
+            "value": "PlayLED"
+        },
+        {
+            "default": "",
+            "desc": "GPIO14 functionality\ndefault setting: ",
+            "key": "gpio14",
+            "section": "GPIO Settings",
+            "title": "GPIO14",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO15 functionality\ndefault setting: ",
+            "key": "gpio15",
+            "section": "GPIO Settings",
+            "title": "GPIO15",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO16 functionality\ndefault setting: ",
+            "key": "gpio16",
+            "section": "GPIO Settings",
+            "title": "GPIO16",
+            "type": "options",
+            "value": "Play"
+        },
+        {
+            "default": "",
+            "desc": "GPIO17 functionality\ndefault setting: ",
+            "key": "gpio17",
+            "section": "GPIO Settings",
+            "title": "GPIO17",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO18 functionality\ndefault setting: ",
+            "key": "gpio18",
+            "section": "GPIO Settings",
+            "title": "GPIO18",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO19 functionality\ndefault setting: ",
+            "key": "gpio19",
+            "section": "GPIO Settings",
+            "title": "GPIO19",
+            "type": "options",
+            "value": "PauseLED"
+        },
+        {
+            "default": "",
+            "desc": "GPIO20 functionality\ndefault setting: ",
+            "key": "gpio20",
+            "section": "GPIO Settings",
+            "title": "GPIO20",
+            "type": "options",
+            "value": "Pause"
+        },
+        {
+            "default": "",
+            "desc": "GPIO21 functionality\ndefault setting: ",
+            "key": "gpio21",
+            "section": "GPIO Settings",
+            "title": "GPIO21",
+            "type": "options",
+            "value": "Stop"
+        },
+        {
+            "default": "",
+            "desc": "GPIO22 functionality\ndefault setting: ",
+            "key": "gpio22",
+            "section": "GPIO Settings",
+            "title": "GPIO22",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO23 functionality\ndefault setting: ",
+            "key": "gpio23",
+            "section": "GPIO Settings",
+            "title": "GPIO23",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO24 functionality\ndefault setting: ",
+            "key": "gpio24",
+            "section": "GPIO Settings",
+            "title": "GPIO24",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO25 functionality\ndefault setting: ",
+            "key": "gpio25",
+            "section": "GPIO Settings",
+            "title": "GPIO25",
+            "type": "options",
+            "value": ""
+        },
+        {
+            "default": "",
+            "desc": "GPIO26 functionality\ndefault setting: ",
+            "key": "gpio26",
+            "section": "GPIO Settings",
+            "title": "GPIO26",
+            "type": "options",
+            "value": "StopLED"
+        },
+        {
+            "default": "",
+            "desc": "GPIO27 functionality\ndefault setting: ",
+            "key": "gpio27",
+            "section": "GPIO Settings",
+            "title": "GPIO27",
+            "type": "options",
+            "value": ""
+        }
+    ],
     "Maslow Settings": [
         {
             "default": "",
@@ -573,7 +842,7 @@
             "section": "Maslow Settings",
             "title": "Serial Connection",
             "type": "string",
-            "value": ""
+            "value": "/dev/ttyACM0"
         },
         {
             "default": 2978.4,
@@ -583,7 +852,7 @@
             "section": "Maslow Settings",
             "title": "Distance Between Motors",
             "type": "string",
-            "value": "2978.4"
+            "value": "3010.01"
         },
         {
             "default": 2438.4,
@@ -613,7 +882,7 @@
             "section": "Maslow Settings",
             "title": "Motor Offset Height in MM",
             "type": "string",
-            "value": "463"
+            "value": "643.0"
         },
         {
             "default": 310,
@@ -633,17 +902,17 @@
             "section": "Maslow Settings",
             "title": "Sled Weight",
             "type": "float",
-            "value": 97.9
+            "value": 92.075
         },
         {
             "default": 139,
-            "desc": "(Legacy) The vertical distance between where the chains mount on the sled to the cutting tool.\ndefault setting: 139",
+            "desc": "The vertical distance between where the chains mount on the sled to the cutting tool.\ndefault setting: 139",
             "firmwareKey": 5,
             "key": "sledHeight",
             "section": "Maslow Settings",
-            "title": "Vertical Distance Sled Mounts to Cutter (Legacy)",
+            "title": "Vertical Distance Sled Mounts to Cutter",
             "type": "string",
-            "value": "139"
+            "value": "92.075"
         },
         {
             "default": 79,
@@ -663,7 +932,7 @@
             "section": "Maslow Settings",
             "title": "z-axis installed",
             "type": "bool",
-            "value": 0
+            "value": 1
         },
         {
             "default": 3.17,
@@ -673,7 +942,34 @@
             "section": "Maslow Settings",
             "title": "Z-Axis Pitch",
             "type": "string",
-            "value": "3.17"
+            "value": "-24"
+        },
+        {
+            "default": 0,
+            "desc": "Wii controller connected via Bluetooth?\ndefault setting: 0",
+            "key": "wiiPendantPresent",
+            "section": "Maslow Settings",
+            "title": "Wii Pendant Installed",
+            "type": "bool",
+            "value": 1
+        },
+        {
+            "default": 0,
+            "desc": "GPIO buttons run in separate process / system service\ndefault setting: 0",
+            "key": "MaslowButtonService",
+            "section": "Maslow Settings",
+            "title": "Raspberry Pi Button Service Active",
+            "type": "bool",
+            "value": 1
+        },
+        {
+            "default": 0,
+            "desc": "Attached command line text display on Maslow\ndefault setting: 0",
+            "key": "clidisplay",
+            "section": "Maslow Settings",
+            "title": "RPI Text display",
+            "type": "bool",
+            "value": 1
         },
         {
             "default": "",
@@ -682,7 +978,7 @@
             "section": "Maslow Settings",
             "title": "Open File",
             "type": "string",
-            "value": ""
+            "value": "swt_1-2_8th_1foot_0001.gcode"
         },
         {
             "default": "",
@@ -700,7 +996,7 @@
             "section": "Maslow Settings",
             "title": "Macro 1 Title",
             "type": "string",
-            "value": "Macro 1"
+            "value": "M1"
         },
         {
             "default": "",
@@ -718,7 +1014,7 @@
             "section": "Maslow Settings",
             "title": "Macro 2 Title",
             "type": "string",
-            "value": "Macro 2"
+            "value": "M2"
         },
         {
             "default": 5,
@@ -727,7 +1023,7 @@
             "section": "Maslow Settings",
             "title": "Z-Axis Safe Travel Height in MM",
             "type": "string",
-            "value": "5"
+            "value": "3"
         },
         {
             "default": 0,
@@ -736,7 +1032,7 @@
             "section": "Maslow Settings",
             "title": "Buffer Gcode",
             "type": "bool",
-            "value": 0
+            "value": 1
         },
         {
             "default": "",
@@ -745,7 +1041,7 @@
             "section": "Maslow Settings",
             "title": "Open Board File",
             "type": "string",
-            "value": ""
+            "value": "half-inch mdf"
         }
     ],
     "Optical Calibration Settings": [
@@ -929,7 +1225,7 @@
             "key": "calibrationExtents",
             "type": "string",
             "value": "Full Area"
-        }        ,
+        },
         {
             "default": 0.125,
             "key": "positionTolerance",
@@ -975,13 +1271,13 @@
             "value": ".nc, .ngc, .text, .gcode"
         },
         {
-            "default": 0,
+            "default": "0",
             "desc": "Use 3D render with orbital controls in lieu of standard 2D rendering with pan/zoom\ndefault setting: False",
             "key": "enable3D",
             "section": "WebControl Settings",
             "title": "Enable 3D Display",
             "type": "bool",
-            "value": 0
+            "value": "0"
         },
         {
             "default": 5000,
@@ -991,285 +1287,6 @@
             "title": "Web Port Number",
             "type": "int",
             "value": 5000
-        },
-        {
-            "default": 0,
-            "desc": "Enable experimental releases to appear in release list\ndefault setting: No",
-            "key": "experimentalReleases",
-            "section": "WebControl Settings",
-            "title": "Enable Experimental Releases",
-            "type": "bool",
-            "value": 0
         }
-    ],
-    "Camera Settings": [
-        {
-            "default": "640x480",
-            "desc": "Size of video image.  Affects FPS and computational needs\ndefault setting: 640x480",
-            "key": "videoSize",
-            "options": [
-                "640x480",
-                "1024x768"
-            ],
-            "section": "Camera Settings",
-            "title": "Video Image Size",
-            "type": "options",
-            "value": "640x480"
-       },
-        {
-            "default": 5,
-            "desc": "Number of frames per second the camera captures\ndefault setting: 5",
-            "key": "fps",
-            "section": "Camera Settings",
-            "title": "fps",
-            "type": "float",
-            "value": 5
-        },
-        {
-            "default": 0.001,
-            "desc": "Sleep time (seconds) during camera thread.  This is here to help us tweak the camera process\ndefault setting: 0.001",
-            "key": "cameraSleep",
-            "section": "Camera Settings",
-            "title": "Camera Thread Sleep Interval",
-            "type": "float",
-            "value": 0.001
-        }
-    ],
-    "GPIO Settings": [
-        {
-            "default": "",
-            "desc": "GPIO2 functionality",
-            "key": "gpio2",
-            "section": "GPIO Settings",
-            "title": "GPIO2",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO3 functionality",
-            "key": "gpio3",
-            "section": "GPIO Settings",
-            "title": "GPIO3",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO4 functionality",
-            "key": "gpio4",
-            "section": "GPIO Settings",
-            "title": "GPIO4",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO5 functionality",
-            "key": "gpio5",
-            "section": "GPIO Settings",
-            "title": "GPIO5",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO6 functionality",
-            "key": "gpio6",
-            "section": "GPIO Settings",
-            "title": "GPIO6",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO7 functionality",
-            "key": "gpio7",
-            "section": "GPIO Settings",
-            "title": "GPIO7",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO8 functionality",
-            "key": "gpio8",
-            "section": "GPIO Settings",
-            "title": "GPIO8",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO9 functionality",
-            "key": "gpio9",
-            "section": "GPIO Settings",
-            "title": "GPIO9",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO10 functionality",
-            "key": "gpio10",
-            "section": "GPIO Settings",
-            "title": "GPIO10",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO11 functionality",
-            "key": "gpio11",
-            "section": "GPIO Settings",
-            "title": "GPIO11",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO12 functionality",
-            "key": "gpio12",
-            "section": "GPIO Settings",
-            "title": "GPIO12",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO13 functionality",
-            "key": "gpio13",
-            "section": "GPIO Settings",
-            "title": "GPIO13",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO14 functionality",
-            "key": "gpio14",
-            "section": "GPIO Settings",
-            "title": "GPIO14",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO15 functionality",
-            "key": "gpio15",
-            "section": "GPIO Settings",
-            "title": "GPIO15",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO16 functionality",
-            "key": "gpio16",
-            "section": "GPIO Settings",
-            "title": "GPIO16",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO17 functionality",
-            "key": "gpio17",
-            "section": "GPIO Settings",
-            "title": "GPIO17",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO18 functionality",
-            "key": "gpio18",
-            "section": "GPIO Settings",
-            "title": "GPIO18",
-            "type": "options",
-            "value": ""
-       }        ,
-        {
-            "default": "",
-            "desc": "GPIO19 functionality",
-            "key": "gpio19",
-            "section": "GPIO Settings",
-            "title": "GPIO19",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO20 functionality",
-            "key": "gpio20",
-            "section": "GPIO Settings",
-            "title": "GPIO20",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO21 functionality",
-            "key": "gpio21",
-            "section": "GPIO Settings",
-            "title": "GPIO21",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO22 functionality",
-            "key": "gpio22",
-            "section": "GPIO Settings",
-            "title": "GPIO22",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO23 functionality",
-            "key": "gpio23",
-            "section": "GPIO Settings",
-            "title": "GPIO23",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO24 functionality",
-            "key": "gpio24",
-            "section": "GPIO Settings",
-            "title": "GPIO24",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO25 functionality",
-            "key": "gpio25",
-            "section": "GPIO Settings",
-            "title": "GPIO25",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO26 functionality",
-            "key": "gpio26",
-            "section": "GPIO Settings",
-            "title": "GPIO26",
-            "type": "options",
-            "value": ""
-       },
-        {
-            "default": "",
-            "desc": "GPIO27 functionality",
-            "key": "gpio27",
-            "section": "GPIO Settings",
-            "title": "GPIO27",
-            "type": "options",
-            "value": ""
-       }
-
     ]
 }
