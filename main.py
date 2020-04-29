@@ -898,9 +898,9 @@ def command(msg):
         print("Shutting Down")
         socketio.stop()
         print("Shutdown")
-    if retval == "Turn Off RPI":
-        print("RPI complete system shutdown")
-        os._exit(0)
+    if (retval == "TurnOffRPI"):
+        print("Turning off RPI")
+        os.system('sudo poweroff')
 
 @socketio.on("settingRequest", namespace="/MaslowCNC")
 def settingRequest(msg):
