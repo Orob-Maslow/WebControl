@@ -673,7 +673,15 @@
             "section": "Maslow Settings",
             "title": "Z-Axis Pitch",
             "type": "string",
-            "value": "3.17"
+            "value": "-24"
+        },
+        {
+            "default": 0,
+            "desc": "GPIO buttons run in separate process / system service",
+            "key": "MaslowButtonService",
+            "title": "Raspberry Pi Button Service Active",
+            "type": "bool",
+            "value": 0
         },
         {
             "default": "",

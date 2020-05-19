@@ -38,7 +38,7 @@ class Data:
     Version Updater
     '''
     lastChecked = -1
-    pyInstallCurrentVersion = 0.9335
+    pyInstallCurrentVersion = 0.933501
     pyInstallUpdateAvailable = False
     pyInstallUpdateBrowserUrl = ""
     pyInstallUpdateVersion = 0
@@ -102,7 +102,9 @@ class Data:
     inPIDPositionTest = False
     PIDVelocityTestVersion = 0
     PIDPositionTestVersion = 0
-
+    
+    GPIOButtonService = False
+    
     """
     Pointers to Objects
     """
