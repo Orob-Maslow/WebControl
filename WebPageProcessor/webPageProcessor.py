@@ -121,6 +121,7 @@ class WebPageProcessor:
                     enableCustom=enableCustom,
                 )
             return page, "Camera Settings", False, "medium", "content", "footerSubmit"
+        
         elif pageID == "gpioSettings":
             setValues = self.data.config.getJSONSettingSection("GPIO Settings")
             if self.data.controllerFirmwareVersion < 100:
@@ -147,6 +148,35 @@ class WebPageProcessor:
                     enableCustom=enableCustom,
                 )
             return page, "GPIO Settings", False, "medium", "content", "footerSubmit"
+        
+        elif pageID == "LEDStatus":
+            setValues = self.data.config.getJSONSettingSection("LED Status List")
+            options = self.data.gpioActions.getLEDColorList()
+            #print(options)  
+            page = render_template(
+                    "LEDStatus.html",
+                    title="LED Status Settings",
+                    settings=setValues,
+                    options=options,
+                    pageID="LEDStatus"
+                    )
+            return page, "LEDStatus", False, "medium", "content", "footerSubmit"
+        
+        elif pageID == "LEDSettings":
+            setValues = self.data.config.getJSONSettingSection("LED Settings")
+            behaviors = self.data.gpioActions.getLEDBehaviorList()
+            colors = self.data.gpioActions.getLEDColors()
+            #print(options)  
+            page = render_template(
+                    "LEDSettings.html",
+                    title="LED Settings",
+                    settings=setValues,
+                    behaviors=behaviors,
+                    colors=colors,
+                    pageID="LEDSettings"
+                    )
+            return page, "LEDSettings", False, "medium", "content", "footerSubmit"
+        
         elif pageID == "openGCode":
             lastSelectedFile = self.data.config.getValue("Maslow Settings", "openFile")
             print(lastSelectedFile)
@@ -245,21 +275,31 @@ class WebPageProcessor:
                 enableHoley = False
             else:
                 enableHoley = True
-            if ((self.data.platform == "RPI")or(self.data.platform == "PYINSTALLER")):
-                docker = True
-                enableRPIshutdown = True
-                #print("RPI shutdown is TRUE")
-            else:
+            if (self.data.platform == "PYINSTALLER"):
                 docker = False
+            else:
+                docker = True
+            if self.data.platform == "RPI":
+                enableRPIshutdown = True
+            else:
                 enableRPIshutdown = False
-                #print ("RPI shutdown is FALSE")
             if self.data.pyInstallUpdateAvailable:
                 updateAvailable = True
                 updateRelease = self.data.pyInstallUpdateVersion
             else:
                 updateAvailable = False
                 updateRelease = "N/A"
-            page = render_template("actions.html", updateAvailable=updateAvailable, updateRelease=updateRelease, docker=docker, customFirmwareVersion=self.data.customFirmwareVersion, stockFirmwareVersion=self.data.stockFirmwareVersion, holeyFirmwareVersion=self.data.holeyFirmwareVersion, enableCustom=enableCustom, enableHoley=enableHoley, enableRPIshutdown = enableRPIshutdown)
+            page = render_template("actions.html", 
+                                   updateAvailable=updateAvailable, 
+                                   updateRelease=updateRelease, 
+                                   docker=docker, 
+                                   customFirmwareVersion=self.data.customFirmwareVersion, 
+                                   stockFirmwareVersion=self.data.stockFirmwareVersion, 
+                                   holeyFirmwareVersion=self.data.holeyFirmwareVersion, 
+                                   enableCustom=enableCustom, 
+                                   enableHoley=enableHoley, 
+                                   enableRPIshutdown = enableRPIshutdown
+                                   )
             return page, "Actions", False, "large", "content", False
         elif pageID == "zAxis":
             socketio.emit("closeModals", {"data": {"title": "Actions"}}, namespace="/MaslowCNC")

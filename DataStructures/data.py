@@ -103,7 +103,9 @@ class Data:
     PIDVelocityTestVersion = 0
     PIDPositionTestVersion = 0
     
-    GPIOButtonService = False
+    GPIOButtonService = False # is there an external subprocess or service running to handle gpio?
+    RGB_LED = False # this is in maslow settings
+    LED_Status = "Off" # "Off, At Home, Homing, Sled Moving, Z Moving, Z Zero, Cutting, Paused, Idle, Error, Calibrating, Need Chain Reset "
     
     """
     Pointers to Objects
@@ -216,9 +218,7 @@ class Data:
 
     def __init__(self):
         """
-
         Initializations.
-
         """
         self.logger.data = self
         self.config.data = self

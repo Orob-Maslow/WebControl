@@ -11,6 +11,7 @@ import schedule
 import time
 import threading
 import json
+import platform
 
 from flask import Flask, jsonify, render_template, current_app, request, flash, Response, send_file, send_from_directory
 from flask_mobility.decorators import mobile_template
@@ -26,7 +27,6 @@ from os import listdir
 from os.path import isfile, join
 
 monkey.patch_all()
-
 app.data = Data()
 app.nonVisibleWidgets = NonVisibleWidgets()
 app.nonVisibleWidgets.setUpData(app.data)
@@ -42,7 +42,6 @@ app.data.gcodeShift = [
     float(app.data.config.getValue("Advanced Settings", "homeX")),
     float(app.data.config.getValue("Advanced Settings", "homeY")),
 ]
-
 version = sys.version_info
 
 if version[:2] > (3, 5):
@@ -91,6 +90,9 @@ app.mcpthread = None
 app.logstreamerthread = None
 
 def web_input_command(cmd, source):
+    """
+    processes input commands from separate service such as raspberry pi GPIO or remote pendant to activate local commands such as start, pause, stop, move, set home, etc.
+    """
     if (len(cmd) > 2):  # pull off the distance if it is there
         distance = cmd[2]  # distance is the third list element
     else:
@@ -144,6 +146,7 @@ def web_input_command(cmd, source):
             app.data.actions.processAction({"data":{"command":"stopZ","arg":"","arg1":""}})
             message = {"data":{source:"stopZ"}}
         elif('defineZ0' in cmd):
+            # TODO fix set z axis zero position
             print ('new Z axis zero point via ', source)
             app.data.actions.processAction({"data":{"command":"defineZ0","arg":"","arg1":""}})
             message = {"data":{source:"defineZ"}}  # this command set will move or change the sled
@@ -172,7 +175,9 @@ def web_input_command(cmd, source):
             app.data.actions.processAction({"data":{"command":"home","arg":"","arg1":""}})
             message = {"data":{source:"movetoHome"}}
         elif('defineHome' in cmd):
-            print ('new home set via ', source, ' to ', app.data.xval ,', ', app.data.yval)
+            # TODO fix set home position
+            # this does not work
+            print ('new home set via ', source, ' to ', app.data.xval ,', ', app.data.yval) 
             app.data.actions.processAction({"data":{"command":"defineHome","arg":str(app.data.xval),"arg1":str(app.data.yval)}})
             message = {"data":{source:"NewHome"}}
         else:
@@ -196,54 +201,65 @@ def web_input_command(cmd, source):
 @app.route('/GPIO', methods=['PUT', 'GET'])
 def remote_function_call():
     '''
-    This is an external web command receiver intended for rpi gpio, but could be from anywhere
+    This is an external web command receiver intended for rpi gpio, but could be from a remote pendant or other command control
     ''' 
-    if (request.method == "PUT"):
-        print ("button function call")
-        message = {"data":{"gpio":"selected"}}
-        result = request.data
-        result = result.decode('utf-8')
-        resultlist = result.split(':')
-        print ('resultlist', resultlist)
-        message = web_input_command(resultlist, "button")                
-        print(message)
+    # TODO  add check for platform and service start information.  
+    try:
+        if (request.method == "PUT"):
+            print ("button function call")
+            message = {"data":{"gpio":"selected"}}
+            result = request.data
+            result = result.decode('utf-8')
+            resultlist = result.split(':')
+            print ('resultlist', resultlist)
+            message = web_input_command(resultlist, "button")                
+            print(message)
+            resp = jsonify(message)
+            resp.status_code = 200 # or whatever the correct number should be
+            return (resp)
+
+        if (request.method == "GET"):
+            setValues = app.data.config.getJSONSettingSection("GPIO Settings")
+            return (jsonify(setValues))
+        return('')
+    except:
+        message = jsonify({"data":{"GPIO Input/Output error":"no data"}})  # on error, respond with something rather than nothing
         resp = jsonify(message)
-        resp.status_code = 200 # or whatever the correct number should be
+        resp.status_code = 404 # or whatever the correct number should be
         return (resp)
     
-    if (request.method == "GET"):
-        setValues = app.data.config.getJSONSettingSection("GPIO Settings")
-        return (jsonify(setValues))
+@app.route('/Status', methods=['GET'])
+def get_status_info():
         
-@app.route('/LED', methods=['PUT','GET'])
-def getLEDinfo():
     '''
     This is data intended for a status LED to be set, though it could be used for a wireless display
     Upload flag signifies system state as running, paused, or stopped,
     Moving flag indicates a stopped cut condition, but the sled is moving
     zmove is the z axis moving    
     ''' 
-    if (request.method == 'GET'):
-        try:
-            message = {"data":{"index": str(app.data.gcodeIndex), \
-                "flag": str(app.data.uploadFlag), \
-                "moving": str(app.data.sledMoving), \
-                "zMove": str(app.data.zMoving), \
-                "sled_location_x": str(app.data.xval), \
-                "sled_location_y": str(app.data.yval), \
-                "sled_location_z": str(app.data.zval), \
-                #This part works
-                "home_location_x": str(app.data.config.getValue("Advanced Settings","homeX")), \
-                "home_location_y": str(app.data.config.getValue("Advanced Settings","homeY")), \
-                }}  #assemble json string
+    try:
+        if (request.method == 'GET'):
+            message = {"data":{"index": str(app.data.gcodeIndex),
+                               "flag": str(app.data.uploadFlag),
+                               "sled_location_x": str(app.data.xval),
+                               "sled_location_y": str(app.data.yval),
+                               "sled_location_z": str(app.data.zval),
+                               "home_location_x": str(app.data.config.getValue("Advanced Settings","homeX")),
+                               "home_location_y": str(app.data.config.getValue("Advanced Settings","homeY")),
+                               "RGB_LED": str(app.data.RGB_LED),
+                               "LED_Status": str(app.data.LED_Status),
+                               "LED_Color": str(app.data.config.getValue("LED Status List",str(app.data.LED_Status)))
+                               }}  #assemble json string
+            print("debug message ", message)
             resp = jsonify(message) # java script object notation convrsion of the message
             resp.status_code = 200
             return (resp) # send the message
-        except:
-            message = jsonify({"data":{"error":"no data"}})  # on error, respond with something rather than nothing
-            resp = jsonify(message)
-            resp.status_code = 404 # or whatever the correct number should be
-            return (resp)
+    except:
+        message = jsonify({"data":{"Status message Input/Output error":"no data"}})  # on error, respond with something rather than nothing
+        print("message error with message: ", message)
+        resp = jsonify(message)
+        resp.status_code = 404 # or whatever the correct number should be
+        return (resp)
         
 @app.route("/")
 @mobile_template("{mobile/}")
@@ -335,6 +351,9 @@ def cameraSettings():
 
 @app.route("/gpioSettings", methods=["POST"])
 def gpioSettings():
+    '''
+    This is called when the GPIO settings from the menu are changed.  The button service must be restarted so the buttons are initialized correctly and useable.
+    '''
     app.data.logger.resetIdler()
     if app.data.platform == "RPI": #for raspberry pi ONLY commands
         if request.method == "POST":
@@ -345,12 +364,54 @@ def gpioSettings():
             resp.status_code = 200
             print("restarting maslow button service") 
             try:
-                subprocess.run(['sudo','/usr/local/etc/MaslowButtonRestart.sh'])
-                print("restarted maslow button service")
+                print("restarting maslow button service")
+                app.data.config.buttonSubProcess('restart')
             except:
                 print("error restarting button service")
             return resp
         
+@app.route("/LEDStatus", methods=["POST"])
+def LEDStatus():
+    '''
+    This is called when the LED status settings from the menu are changed.  The button service must be restarted so the LED gPIO pins are initialized correctly and useable.
+    '''
+    app.data.logger.resetIdler()
+    if app.data.platform == "RPI": #for raspberry pi ONLY commands
+        if request.method == "POST":
+            result = request.form
+            app.data.config.updateSettings("LED Status List", result)
+            message = {"status": 200}
+            resp = jsonify(message)
+            resp.status_code = 200
+            print("Updated LED status list in webcontrol.json; restarting maslow button service") 
+            try:
+                print("restarting maslow button service")
+                app.data.config.buttonSubProcess('restart')
+            except:
+                print("error restarting button service")
+            return resp  
+        
+@app.route("/LEDSettings", methods=["POST"])
+def LEDSettings():
+    '''
+    This is called when the LED settings from the menu are changed.  The button service must be restarted so the LED gPIO pins are initialized correctly and useable.
+    '''
+    app.data.logger.resetIdler()
+    if app.data.platform == "RPI": #for raspberry pi ONLY commands
+        if request.method == "POST":
+            result = request.form
+            app.data.config.updateSettings("LED Settings", result)
+            message = {"status": 200}
+            resp = jsonify(message)
+            resp.status_code = 200
+            print("Updated LED settings webcontrol.json; restarting maslow button service") 
+            try:
+                print("restarting maslow button service")
+                app.data.config.buttonSubProcess('restart')
+            except:
+                print("error restarting button service")
+            return resp 
+                      
 @app.route("/uploadGCode", methods=["POST"])
 def uploadGCode():
     app.data.logger.resetIdler()
@@ -903,16 +964,7 @@ if __name__ == "__main__":
     app.config["SECRET_KEY"] = "secret!"
     #look for touched file
     app.data.config.checkForTouchedPort()
-    webPort = app.data.config.getValue("WebControl Settings", "webPort")
-    webPortInt = 5000
-    try:
-        webPortInt = int(webPort)
-        if webPortInt < 0 or webPortInt > 65535:
-            webPortInt = 5000
-    except Exception as e:
-        app.data.console_queue.put(e)
-        app.data.console_queue.put("Invalid port assignment found in webcontrol.json")
-
+    webPort = app.data.config.getWebPortNumber()
     print("-$$$$$-")
     print(os.path.abspath(__file__))
     app.data.releaseManager.processAbsolutePath(os.path.abspath(__file__))
@@ -920,20 +972,20 @@ if __name__ == "__main__":
 
 
     print("opening browser")
-    webPortStr = str(webPortInt)
-    webbrowser.open_new_tab("http://localhost:"+webPortStr)
+    portstring = "http://localhost:"+webPort
+    webbrowser.open_new_tab(portstring)
     host_name = socket.gethostname()
     host_ip = socket.gethostbyname(host_name)
-    app.data.hostAddress = host_ip + ":" + webPortStr
+    app.data.hostAddress = host_ip + ":" + webPort
     
     if app.data.platform == "RPI":
         app.data.GPIOButtonService = app.data.config.getValue("Maslow Settings","MaslowButtonService")
         # start button service next to last : this launches a separete button
         if (app.data.GPIOButtonService):
             print("starting Maslow GPIO button service")
-            subprocess.run('/usr/local/etc/MBstart.sh') # MB is short for MaslowButon
+            app.data.config.buttonSubProcess('start')
 
     # app.data.shutdown = shutdown
-    socketio.run(app, use_reloader=False, host="0.0.0.0", port=webPortInt)
+    socketio.run(app, use_reloader=False, host="0.0.0.0", port=int(webPort), debug=True)
     # socketio.run(app, host='0.0.0.0')
 

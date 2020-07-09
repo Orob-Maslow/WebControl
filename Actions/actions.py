@@ -12,6 +12,7 @@ import re
 import zipfile
 import threading
 import platform
+import subprocess
 from subprocess import call
 from gpiozero.pins.mock import MockFactory
 from gpiozero import Device
@@ -277,6 +278,15 @@ class Actions(MakesmithInitFuncs):
             #elif msg["data"]["command"] == "optimizeGCode":
             #    if not self.data.gcodeOptimizer.optimize():
             #        self.data.ui_queue1.put("Alert", "Alert", "Error with optimizing gcode")
+            elif msg["data"]["command"] == "buttonSubProcessStop":
+                if not self.data.config.buttonSubProcess('stop'):
+                    self.data.ui_queue1.put("Alert", "Alert", "Error with stopping button subprocess")
+            elif msg["data"]["command"] == "buttonSubProcessStart":
+                if not self.data.config.buttonSubProcess('start'):
+                    self.data.ui_queue1.put("Alert", "Alert", "Error with starting button subprocess")
+            elif msg["data"]["command"] == "buttonSubProcessRestart":
+                 if not self.data.config.buttonSubProcess('restart'):
+                        self.data.ui_queue1.put("Alert", "Alert", "Error with restarting button subprocess")     
             else:
                 response = "Function not currently implemented.. Sorry."
                 response = response + "["+msg["data"]["command"]+"]"
@@ -307,6 +317,7 @@ class Actions(MakesmithInitFuncs):
     def turnOff(self):
         ''' this is the rpi soft power button function'''
         try:
+            self.data.LED_Status = "Off"
             oname = os.name
             print ("OS is ", oname)
             if oname == "posix":
@@ -336,6 +347,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            
             if self.data.units == "MM":
                 scaleFactor = 25.4
             else:
@@ -357,6 +369,8 @@ class Actions(MakesmithInitFuncs):
             # send update to UI client with new home position
             position = {"xval": homeX, "yval": homeY}
             self.data.ui_queue1.put("Action", "homePositionMessage", position)
+            if ((homeX == self.data.xval) and (homeY == self.data.yval)):
+                self.data.LED_Status = "At Home"
             return True
         except Exception as e:
             self.data.console_queue.put(str(e))
@@ -368,6 +382,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Homing"
             self.data.gcode_queue.put("G90  ")
             safeHeightMM = float(
                 self.data.config.getValue("Maslow Settings", "zAxisSafeHeight")
@@ -405,6 +420,7 @@ class Actions(MakesmithInitFuncs):
                 self.data.gcode_queue.put("G20 ")
             else:
                 self.data.gcode_queue.put("G21 ")
+            self.LED_Status = "Idle"
             return True
         except Exception as e:
             self.data.console_queue.put(str(e))
@@ -416,6 +432,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Idle"
             self.data.gcode_queue.put("G10 Z0 ")
             return True
         except Exception as e:
@@ -429,6 +446,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Idle"
             self.data.quick_queue.put("!")
             with self.data.gcode_queue.mutex:
                 self.data.gcode_queue.queue.clear()
@@ -447,6 +465,7 @@ class Actions(MakesmithInitFuncs):
                 # set current Z target to the current z height in case gcode doesn't include a z move before an xy move.
                 # if it doesn't and the user pauses during an xy move, then the target Z is set to 0.  This sets it to
                 # what it currently is when the user started the gcode send.
+                self.LED_Status = "Run"
                 self.data.currentZTarget = self.data.zval
                 # if the gcode index is not 0, then make sure the machine is in the proper state before starting to send
                 # the gcode.
@@ -477,6 +496,7 @@ class Actions(MakesmithInitFuncs):
         '''
         try:
             self.data.console_queue.put("stopping run")
+            self.LED_Status = "Idle"
             # this is necessary because of the way PID data is being processed.  Otherwise could potentially get stuck
             # in PID test
             self.data.inPIDPositionTest = False
@@ -508,6 +528,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Sled Moving"
             chainLength = self.data.config.getValue(
                 "Advanced Settings", "chainExtendLength"
             )
@@ -516,7 +537,6 @@ class Actions(MakesmithInitFuncs):
                 "B09 R" + str(chainLength) + " L" + str(chainLength) + " "
             )
             self.data.gcode_queue.put("G91 ")
-
             # the firmware doesn't update sys.xPosition or sys.yPosition during a singleAxisMove
             # therefore, the machine doesn't know where it is.
             # so tell the machine where it's at by sending a reset chain length
@@ -534,6 +554,7 @@ class Actions(MakesmithInitFuncs):
         '''
         try:
             self.data.gcode_queue.put("B04 ")
+            self.LED_Status = "Calibrating"
             return True
         except Exception as e:
             self.data.console_queue.put(str(e))
@@ -579,6 +600,7 @@ class Actions(MakesmithInitFuncs):
         '''
         try:
             if self.data.uploadFlag == 1:
+                self.LED_Status = "Paused"
                 self.data.uploadFlag = 2
                 self.data.console_queue.put("Run Paused")
                 self.data.ui_queue1.put("Action", "setAsResume", "")
@@ -591,6 +613,7 @@ class Actions(MakesmithInitFuncs):
                 self.data.pausedPositioningMode = self.data.positioningMode
                 #print("Saving paused positioning mode: " + str(self.data.pausedPositioningMode))
                 self.data.gpioActions.causeAction("PauseLED", "on")
+                
             return True
         except Exception as e:
             self.data.console_queue.put(str(e))
@@ -658,6 +681,11 @@ class Actions(MakesmithInitFuncs):
             self.data.quick_queue.put("~")
             self.data.ui_queue1.put("Action", "setAsPause", "")
             self.data.gpioActions.causeAction("PauseLED", "off")
+            if (self.data.Zval < 0):
+                self.LED_Status = "Cutting"
+            else:
+                self.LED_Status = "Run"
+             
             return True
         except Exception as e:
             self.data.console_queue.put(str(e))
@@ -669,6 +697,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Sled Moving"
             self.data.gcode_queue.put("G90  ")
             safeHeightMM = float(
                 self.data.config.getValue("Maslow Settings", "zAxisSafeHeight")
@@ -770,6 +799,7 @@ class Actions(MakesmithInitFuncs):
         # moved equals what was specified.  For example, if enabled and command is issued to move one foot to top right,
         # then the x and y coordinates will be calculated as the 0.707 feet so that a total of 1 foot is moved.  If
         # disabled, then the sled will move 1 foot left and 1 foot up, for a total distance of 1.414 feet.
+        self.LED_Status = "Sled Moving"
         if self.data.config.getValue("WebControl Settings","diagonalMove") == 1:
             diagMove = round(math.sqrt(distToMove*distToMove/2.0), 4)
         else:
@@ -811,6 +841,7 @@ class Actions(MakesmithInitFuncs):
         '''
 
         try:
+            self.LED_Status = "Z Moving"
             #keep track of distToMoveZ value
             self.data.config.setValue("Computed Settings", "distToMoveZ", distToMoveZ)
             # It's possible the front page is set for one units and when you go to z-axis control, you might switch
@@ -988,6 +1019,8 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            
+            self.LED_Status = "Calibrating"
             if  time > 0:
                 self.data.gcode_queue.put("B11 "+sprocket+" S100 T"+str(time))
             else:
@@ -1007,6 +1040,7 @@ class Actions(MakesmithInitFuncs):
         '''
         try:
             # calculate the amoount of chain to be fed out/in based upon sprocket circumference and degree
+            self.LED_Status = "Calibrating"
             degValue = round(
                 float(self.data.config.getValue("Advanced Settings", "gearTeeth"))
                 * float(self.data.config.getValue("Advanced Settings", "chainPitch"))
@@ -1040,6 +1074,7 @@ class Actions(MakesmithInitFuncs):
         Sets the call back for the automatic sprocket alignment and requests the measurement.
         '''
         try:
+            self.LED_Status = "Calibrating"
             self.data.measureRequest = self.getLeftChainLength
             # request a measurement
             self.data.gcode_queue.put("B10 L")
@@ -1077,6 +1112,7 @@ class Actions(MakesmithInitFuncs):
         vertical.
         :return:
         '''
+        self.LED_Status = "Calibrating"
         chainPitch = float(self.data.config.getValue("Advanced Settings", "chainPitch"))
         gearTeeth = float(self.data.config.getValue("Advanced Settings", "gearTeeth"))
         distPerRotation = chainPitch * gearTeeth
@@ -1097,6 +1133,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Calibrating"
             self.data.gcode_queue.put("B06 L0 R0 ")
             return True
         except Exception as e:
@@ -1111,6 +1148,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Calibrating"
             self.data.gcode_queue.put("B08 ")
             return True
         except Exception as e:
@@ -1155,6 +1193,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Calibrating"
             self.data.triangularCalibration.acceptTriangularKinematicsResults()
             return True
         except Exception as e:
@@ -1170,6 +1209,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Calibrating"
             motorYoffsetEst, rotationRadiusEst, chainSagCorrectionEst, cut34YoffsetEst = self.data.triangularCalibration.calculate(
                 result
             )
@@ -1194,6 +1234,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Calibrating"
             motorYoffsetEst, distanceBetweenMotors, leftChainTolerance, rightChainTolerance, calibrationError = self.data.holeyCalibration.Calibrate(
                 result
             )
@@ -1370,6 +1411,7 @@ class Actions(MakesmithInitFuncs):
         try:
             # if this is a pyinstaller release, find out where the root is... it could be a temp directory if single
             # file
+            self.LED_Status = "Calibrating"
             if self.data.platform == "PYINSTALLER":
                 home = os.path.join(self.data.platformHome)
             else:
@@ -1513,6 +1555,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         # make sure not out of range.
+        self.LED_Status = "Sled Moving"
         bedHeight = float(self.data.config.getValue("Maslow Settings","bedHeight"))/25.4
         bedWidth = float(self.data.config.getValue("Maslow Settings", "bedWidth"))/25.4
         try:
@@ -1743,6 +1786,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.LED_Status = "Calibrating"
             for x in range(6):
                 self.data.ui_queue1.put("Action", "updateTimer", chain+":"+str(5-x))
                 self.data.console_queue.put("Action:updateTimer_" + chain + ":" + str(5 - x))
@@ -1762,6 +1806,7 @@ class Actions(MakesmithInitFuncs):
 
     def issueStopCommand(self, distance):
         try:
+            self.LED_Status = "Idle"
             self.data.quick_queue.put("!")
             with self.data.gcode_queue.mutex:
                 self.data.gcode_queue.queue.clear()

@@ -8,7 +8,7 @@ import math
 import gzip
 import io
 
-
+# TODO add R parser combined with firmware validation to alert user if gcode is going to cause problems.  (i.e. < 1.28 AND R in gcode line#)
 class Line:
     def __init__(self):
         self.points = []
@@ -149,6 +149,7 @@ class GCodeFile(MakesmithInitFuncs):
             filtersparsed = [x.replace("I ", "I") for x in filtersparsed]
             filtersparsed = [x.replace("J ", "J") for x in filtersparsed]
             filtersparsed = [x.replace("F ", "F") for x in filtersparsed]
+            filtersparsed = [x.replace("R ", "R") for x in filtersparsed]
             self.data.gcode = "[]"
             self.data.gcode = filtersparsed
 
@@ -393,6 +394,7 @@ class GCodeFile(MakesmithInitFuncs):
             xTarget = self.xPosition
             yTarget = self.yPosition
             zTarget = self.zPosition
+            rTarget = self.rPosition
             iTarget = 0
             jTarget = 0
 
@@ -408,10 +410,15 @@ class GCodeFile(MakesmithInitFuncs):
             j = re.search("J(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if j:
                 jTarget = float(j.groups()[0]) * self.canvasScaleFactor
+            r = re.search("R(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
+            if r:
+                rTarget = float(r.groups()[0]) * self.canvasScaleFactor
             z = re.search("Z(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if z:
                 zTarget = float(z.groups()[0]) * self.canvasScaleFactor
-
+            
+            # TODO add r functionality for on screen display to go with R firmware upgrade
+            
             radius = math.sqrt(iTarget ** 2 + jTarget ** 2)
             centerX = self.xPosition + iTarget
             centerY = self.yPosition + jTarget

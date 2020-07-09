@@ -1,0 +1,53 @@
+{% block content %}
+<div class="container-fluid">
+  <input id="pageID" type="hidden" value="{{pageID}}">
+    <div class = "row">
+        <div class = "col-3">
+            <button type="button" class="btn btn-lg  btn-block btn-secondary" onclick="action('buttonSubProcessStop').val())">Stop Service</button>
+        </div>
+        <div class = "col-3">
+            <button type="button" class="btn btn-lg  btn-block btn-secondary" onclick="action('buttonSubProcessStart').val())">Start Service</button>
+        </div>
+        <div class = "col-3">
+            <button type="button" class="btn btn-lg  btn-block btn-secondary" onclick="action('buttonSubProcessRestart').val())">Restart Service</button>
+        </div>
+    </div>
+    <div class="row"><br></div>
+    <form id="settingsForm">
+        <div class="row">
+        </div>
+        {% for setting in settings %}
+            <div class="row align-items-center">
+                <div class="col-3">
+                    <p{{ 'style=color:#ccc'}}>{{setting.title}}</p>
+                </div>
+                <div class="col-3">
+                    {% if setting.typec=="color" %}
+                      <select name="{{setting.key}}" data-group="{{title}}" {{''}}>
+                        {% for color in colors %}
+                          <option value="{{color}}" {{'selected' if color == setting.valuec else ''}}>{{color}}</option>
+                        {% endfor %}
+                      </select>
+                    {% endif %}
+                  </div>
+                  <div class="col-3">
+                    {% if setting.typeb=="behavior" %}
+                      <select name="{{setting.key}}" data-group="{{title}}" {{''}}>
+                        {% for behavior in behaviors %}
+                          <option value="{{behavior}}" {{'selected' if behavior == setting.valueb else ''}}>{{behavior}}</option>
+                        {% endfor %}
+                      </select>
+                    {% endif %}
+                  </div>
+            </div>
+        {% endfor %}
+        
+    <!--<button type="submit" class="btn btn-primary">Submit</button>-->
+  </form>
+</div>
+{% endblock %}
+
+{% block javascript %}
+<script src="{{ url_for('static',filename='scripts/settings.js', version='11102020a') }}" crossorigin="anonymous"></script>
+<script> feather.replace() </script>
+{% endblock %}

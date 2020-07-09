@@ -679,7 +679,16 @@
             "default": 0,
             "desc": "GPIO buttons run in separate process / system service",
             "key": "MaslowButtonService",
-            "title": "Raspberry Pi Button Service Active",
+            "section": "Maslow Settings",
+            "title": "Raspberry Pi GPIO Button Service Active",
+            "type": "bool",
+            "value": 0
+        },
+        {
+            "default": 0,
+            "desc": "System status can be selected based on color and action in the GPIO settings page",
+            "key": "TriColorLED",
+            "title": "Status Indicator is Tricolor LED",
             "type": "bool",
             "value": 0
         },
@@ -1041,6 +1050,107 @@
             "title": "Camera Thread Sleep Interval",
             "type": "float",
             "value": 0.001
+        }
+    ],
+    "LED Status List": [
+        {
+            "default": "",
+            "desc": "LED Idle Behavior",
+            "key": "idle",
+            "section": "LED Status List",
+            "title": "Idle ",
+            "type": "options",
+            "value": ""  
+       },
+       {
+            "default": "",
+            "desc": "LED At Home Behavior",
+            "key": "athome",
+            "section": "LED Status List",
+            "title": "At Home",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED Homing Behavior",
+            "key": "homing",
+            "section": "LED Status List",
+            "title": "Homing",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED run Gcode Behavior",
+            "key": "run",
+            "section": "LED Status List",
+            "title": "Run",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED Sled Moving Behavior",
+            "key": "sledmoving",
+            "section": "LED Status List",
+            "title": "Sled Moving",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED Calibrating Behavior",
+            "key": "calibrating",
+            "section": "LED Status List",
+            "title": "Calibrating",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED Paused Behavior",
+            "key": "paused",
+            "section": "LED Status List",
+            "title": "Paused",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED Cutting Behavior",
+            "key": "cutting",
+            "section": "LED Status List",
+            "title": "Cutting",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED shutdown Behavior",
+            "key": "off",
+            "section": "LED Status List",
+            "title": "Shutdown",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED Z Moving Behavior",
+            "key": "zmoving",
+            "section": "LED Status List",
+            "title": "Z Moving",
+            "type": "options",
+            "value": "" 
+        },
+        {
+            "default": "",
+            "desc": "LED Error Behavior",
+            "key": "error",
+            "section": "LED Status List",
+            "title": "Error",
+            "type": "options",
+            "value": ""  
         }
     ],
     "GPIO Settings": [

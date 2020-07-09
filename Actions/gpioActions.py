@@ -5,6 +5,7 @@ from gpiozero import Device, Button, LED
 
 class GPIOActions(MakesmithInitFuncs):
 
+
     def __init__(self):
         pass
 
@@ -13,19 +14,83 @@ class GPIOActions(MakesmithInitFuncs):
     '''
     Buttons = []
     LEDs = []
-    actionList = ["", "WebMCP Running", "Shutdown", "Stop", "Pause", "Play", "Home", "Return to Center", "PlayLED", "PauseLED", "StopLED"]
-
+    actionList = ["","Spindle On", "Spindle Off", "Shutdown", "Stop", "Pause", "Play", "Set Home", "Go Home", "Return to Center", "PlayLED", "PauseLED", "StopLED", "Tri_LED_RED","Tri_LED_GREEN","Tri_LED_BLUE" ]
+    
+    LEDStatusList = ["Idle",
+                     "At Home",
+                     "Homing",
+                     "Run",
+                     "Sled Moving",
+                     "Calibrating",
+                     "Paused",
+                     "Cutting",
+                     "Off",
+                     "Z Moving",
+                     "Error"]
+    
+    LEDColorList = ["",
+                    "Off",
+                    "Red On",
+                    "Red Blink",
+                    "Red BlinkFast",
+                    "Red BlinkSlow",
+                    "Yellow On",
+                    "Yellow Blink",
+                    "Yellow BlinkFast",
+                    "Yellow BlinkSlow",
+                    "Green On",
+                    "Green Blink",
+                    "Green BlinkFast",
+                    "Green BlinkSlow",
+                    "Cyan On",
+                    "Cyan Blink",
+                    "Cyan BlinkFast",
+                    "Cyan BlinkSlow",
+                    "Blue On",
+                    "Blue Blink",
+                    "Blue BlinkFast",
+                    "Blue BlinkSlow",
+                    "Magenta On",
+                    "Magenta Blink",
+                    "Magenta BlinkFast",
+                    "Magenta BlinkSlow",
+                    "White On",
+                    "White Blink",
+                    "White BlinkFast",
+                    "White BlinkSlow"
+                    ]
+    
     def getActionList(self):
         return self.actionList
-
+    
+    def getLEDStatusList(self):
+        return self.LEDStatusList
+    
+    def getLEDColorList(self):
+        return self.LEDColorList
+    
+    def getLEDColors(self):
+        return self.LEDColors
+    
+    def getLEDBehaviorList(self):
+        return self.LEDBehaviorList
+    
     def setup(self):
         #self.setGPIOAction(2,"Stop")
         setValues = self.data.config.getJSONSettingSection("GPIO Settings")
+        self.data.RGB_LED = self.data.config.getValue("Maslow Settings","TriColorLED")
+        self.data.GPIOButtonService = self.data.config.getValue("Maslow Settings","MaslowButtonService")
+        if (self.data.GPIOButtonService == True):
+            bservice = "ON"
+        else:
+            bservice = "OFF"
+        print("GPIO separate service is ", bservice)
         #print(setValues)
         for setting in setValues:
             if setting["value"] != "":
                 pinNumber = int(setting["key"][4:])
-                self.setGPIOAction(pinNumber, setting["value"])
+                if (self.data.GPIOButtonService == False): # if MaslowButton.py is not running then set up gpio in this process
+                    self.setGPIOAction(pinNumber, setting["value"])
 
     def setGPIOAction(self,pin, action):
         # first remove pin assignments if already made
@@ -53,13 +118,18 @@ class GPIOActions(MakesmithInitFuncs):
             button.when_pressed = pinAction
             self.Buttons.append(button)
             print("set Button with action: "+action)
-        if type == "led":
+        if ((type == "led") and not (self.data.GPIOButtonService)):
             _led = LED(pin)
             led = (action,_led)
             self.LEDs.append(led)
             print("set LED with action: " + action)
-
+            #if (self.data.tricolor):
+                # TODO implement color as a function of LEDStatus
+               # pass
     def getAction(self, action):
+        '''
+        buttons cause actions
+        '''
         if action == "Stop":
             return "button", self.data.actions.stopRun
         elif action == "Pause":
