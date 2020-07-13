@@ -1,11 +1,7 @@
 from DataStructures.makesmithInitFuncs import MakesmithInitFuncs
 from gpiozero.pins.mock import MockFactory
 from gpiozero import Device, Button, LED
-
-
 class GPIOActions(MakesmithInitFuncs):
-
-
     def __init__(self):
         pass
 
@@ -138,14 +134,20 @@ class GPIOActions(MakesmithInitFuncs):
             return "button", self.data.actions.startRun
         else:
             return "led", None
-
+        
+    def runrun(self):
+        print("gpio button press detected")
+        self.data.actions.startRun()
+        
     def causeAction(self, action, onoff):
         for led in self.LEDs:
             if led[0] == action:
+                print(led[1])
                 if onoff == "on":
                     led[1].on()
                 else:
                     led[1].off()
+                print(led[1])
         if action == "PlayLED" and onoff == "on":
             self.causeAction("PauseLED", "off")
             self.causeAction("StopLED", "off")

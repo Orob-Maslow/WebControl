@@ -33,7 +33,12 @@ class Data:
     customFirmwareVersion = None
     holeyFirmwareVersion = None
     controllerFirmwareVersion = 0
-
+    '''
+    interpreter version
+    if using a compiler newer than 3.5, use the newer string format methods without %'s
+    '''
+    pythonVersion35 = False  
+    
     '''
     Version Updater
     '''
@@ -42,11 +47,11 @@ class Data:
     pyInstallUpdateAvailable = False
     pyInstallUpdateBrowserUrl = ""
     pyInstallUpdateVersion = 0
-    pyInstallPlatform = "win"
+    pyInstallPlatform = "rpi"
     pyInstallType = "singlefile"
     pyInstallInstalledPath = ""
 
-
+ 
     # all of the available COM ports
     comPorts = []
     # This defines which COM port is used
@@ -124,7 +129,6 @@ class Data:
     continuousCamera = False
     gpioActions = None
     boardManager = None
-
     """
 
     Colors
