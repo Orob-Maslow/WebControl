@@ -256,7 +256,7 @@ class MaslowButton():
             self.LEDs.remove(foundLED)
         print (self.LEDs)
         if action[:3] == "Tri":
-            self.triLED = split(action,"_")
+            self.triLED = action.split("_")
             if self.triLED[2] == "RED":
                 self.ed = pin
             elif self.triLED[2] == "GREEN":
@@ -323,14 +323,14 @@ class MaslowButton():
         status/action, color, type
         '''
         #get pin name
-        colors = split(color,' ')
+        colors = color.split(' ')
         self.Status_LED.Color = (color[0])
         if color[1] == "Blink":
-            self.Status_LED.Blink(1,1,0,0,color[0],(0,0,0),n,True)
+            self.Status_LED.Blink(1,1,0,0,color[0],(0,0,0),None,True)
         elif color[1] == "BlinkFast":
-            self.Status_LED.Blink(0.5,0.5,0,0,color[0],(0,0,0),n,True)
+            self.Status_LED.Blink(0.5,0.5,0,0,color[0],(0,0,0),None,True)
         elif color[1] == "BlinkSlow" or color[1] == "Pulse":
-            self.Status_LED.Blink(2,2,0,0,color[0],(0,0,0),n,True)
+            self.Status_LED.Blink(2,2,0,0,color[0],(0,0,0),None,True)
         elif color[1] == "On":
             pass
         elif color[1] == "Off":
