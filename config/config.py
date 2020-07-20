@@ -184,7 +184,7 @@ class Config(MakesmithInitFuncs):
         if ((self.data.GPIOButtonService) and (self.data.platform == "RPI")):
             #try:
                 cwd = os.getcwd()
-                startcommand = 'python ' + str(cwd) + '/Services/maslowButton.py'
+                startcommand = 'python3 ' + str(cwd) + '/Services/maslowButton.py'
                 print("current working directory: ", str(cwd))
                 path =  cwd + '/Services/maslowButton.py'                
                 if (os.path.isfile(path)):
@@ -213,12 +213,13 @@ class Config(MakesmithInitFuncs):
                     return True
                 elif command == 'start':
                     print("Maslow Button subprocess starting")
-                    subprocess.Popen(cwd + '/Services/MBstart.sh')
+                    subprocess.call([cwd + '/Services/MBstart.sh'])
+                    #subprocess.Popen(startcommand,, stdout=dev_null, stderr=dev_null)
                     return True
                 elif command == 'restart':
                     print("Maslow Button subprocess restarting")
                     subprocess.call('killall -9 maslowButton.py')
-                    subprocess.Popen(cwd + '/Services/MBstart.sh')
+                    subprocess.Popen([cwd + '/Services/MBstart.sh'])
                     return True
                 else:
                     self.data.console_queue.put("no process found or cannot start service - invalid request")

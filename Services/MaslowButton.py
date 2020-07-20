@@ -276,6 +276,7 @@ class MaslowButton():
                 self.LEDs.append(led)
                 print("set LED with action: " + action)
         #pause()
+        
     def getAction(self, action):
         #print(action)
         if action == "Stop":
@@ -291,7 +292,7 @@ class MaslowButton():
             return "button", returnHome
         else:
             return "led", None
-        
+       
     def causeAction(self, action, onoff):
         for led in self.LEDs:
             if led[0] == action:

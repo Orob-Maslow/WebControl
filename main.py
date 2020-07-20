@@ -205,10 +205,23 @@ def web_input_command(cmd, source):
             message = {"data":{"system":"NONE selected"}}
     return(message)
 
+@app.route("/")
+@mobile_template("{mobile/}")
+def index(template):
+    app.data.logger.resetIdler()
+    macro1Title = (app.data.config.getValue("Maslow Settings", "macro1_title"))[:6]
+    macro2Title = (app.data.config.getValue("Maslow Settings", "macro2_title"))[:6]
+    if template == "mobile/":
+        return render_template("frontpage3d_mobile.html", modalStyle="modal-lg", macro1_title=macro1Title,  macro2_title=macro2Title)
+    else:
+        return render_template("frontpage3d.html", modalStyle="mw-100 w-75", macro1_title=macro1Title,  macro2_title=macro2Title)
+    
 @app.route('/GPIO', methods=['PUT', 'GET'])
-def remote_function_call():
+def call_GPIO():
     '''
-    This is an external web command receiver intended for rpi gpio, but could be from a remote pendant or other command control
+    MaslowButton.py starts as a separate python process if the maslow setting menu maslow button flag is true
+    The GPIO is for raspberry pi general purpose input/output such as button and LED hardware physically attached to the raspberry pi
+    When those buttons are pressed, the seaparate process issues an HTTP/PUT request and this method handles it.  The /LED section below sends information for LEDs
     ''' 
     # TODO  add check for platform and service start information.  
     try:
@@ -267,23 +280,12 @@ def get_status_info():
         resp = jsonify(message)
         resp.status_code = 404 # or whatever the correct number should be
         return (resp)
-        
-@app.route("/")
-@mobile_template("{mobile/}")
-def index(template):
-    app.data.logger.resetIdler()
-    macro1Title = (app.data.config.getValue("Maslow Settings", "macro1_title"))[:6]
-    macro2Title = (app.data.config.getValue("Maslow Settings", "macro2_title"))[:6]
-    if template == "mobile/":
-        return render_template("frontpage3d_mobile.html", modalStyle="modal-lg", macro1_title=macro1Title,  macro2_title=macro2Title)
-    else:
-        return render_template("frontpage3d.html", modalStyle="mw-100 w-75", macro1_title=macro1Title,  macro2_title=macro2Title)
 
-@app.route('/GPIO', methods=['PUT', 'GET'])
-def remote_function_call():
+@app.route('/GPIOsettings', methods=['PUT', 'GET'])
+def GPIOsettings():
     '''
-    MaslowButton.py starts as a separate python process if the maslow setting flag is true
-    The GPIO is for raspberry pi general purpoe input/output such as button and LED hardware physically attached to the raspberry pi
+    MaslowButton.py starts as a separate python process if the maslow setting menu maslow button flag is true
+    The GPIO is for raspberry pi general purpose input/output such as button and LED hardware physically attached to the raspberry pi
     When those buttons are pressed, the seaparate process issues an HTTP/PUT request and this method handles it.  The /LED section below sends information for LEDs
     ''' 
     if (request.method == "PUT"):
@@ -427,7 +429,6 @@ def webControlSettings():
         resp = jsonify(message)
         resp.status_code = 200
         return resp
-
 
 @app.route("/cameraSettings", methods=["POST"])
 def cameraSettings():
@@ -875,11 +876,9 @@ def sendDocs(path):
     print(path)
     return send_from_directory('docs/assets/', path)
 
-
 @socketio.on("checkInRequested", namespace="/WebMCP")
 def checkInRequested():
     socketio.emit("checkIn", namespace="/WebMCP")
-
 
 @socketio.on("connect", namespace="/WebMCP")
 def watchdog_connect():
@@ -895,11 +894,9 @@ def watchdog_connect():
         app.mcpthread.start()
         app.data.console_queue.put("started mcp thread")
 
-
 @socketio.on("my event", namespace="/MaslowCNC")
 def my_event(msg):
     app.data.console_queue.put(msg["data"])
-
 
 @socketio.on("modalClosed", namespace="/MaslowCNC")
 def modalClosed(msg):
@@ -907,7 +904,6 @@ def modalClosed(msg):
     data = json.dumps({"title": msg["data"]})
     socketio.emit("message", {"command": "closeModals", "data": data, "dataFormat": "json"},
                   namespace="/MaslowCNC", )
-
 
 @socketio.on("contentModalClosed", namespace="/MaslowCNC")
 def contentModalClosed(msg):
@@ -936,7 +932,6 @@ def alertModalClosed(msg):
     data = json.dumps({"title": msg["data"]})
     socketio.emit("message", {"command": "closeAlertModals", "data": data, "dataFormat": "json"},
                   namespace="/MaslowCNC", )
-
 
 @socketio.on("requestPage", namespace="/MaslowCNC")
 def requestPage(msg):
@@ -1037,7 +1032,6 @@ def log_connect():
 def log_disconnect():
     app.data.console_queue.put("Client disconnected")
 
-
 @app.template_filter('isnumber')
 def isnumber(s):
     try:
@@ -1048,7 +1042,6 @@ def isnumber(s):
         
 #def shutdown():
 #    print("Shutdown")
-
 
 if __name__ == "__main__":
     app.debug = False
