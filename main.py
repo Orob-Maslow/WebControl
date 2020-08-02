@@ -1039,7 +1039,7 @@ def isnumber(s):
         return True
     except ValueError:
         return False
-        
+
 #def shutdown():
 #    print("Shutdown")
 
@@ -1070,6 +1070,6 @@ if __name__ == "__main__":
             app.data.config.buttonSubProcess('start')
 
     # app.data.shutdown = shutdown
-    socketio.run(app, use_reloader=False, host="0.0.0.0", port=int(webPort), debug=True)
+    socketio.run(app, use_reloader=False, host="0.0.0.0", port=int(webPort))
     # socketio.run(app, host='0.0.0.0')
 
