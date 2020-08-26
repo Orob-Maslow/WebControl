@@ -8,13 +8,15 @@ import math
 import gzip
 import io
 
-
+# TODO add R parser combined with firmware validation to alert user if gcode is going to cause problems.  (i.e. < 1.28 AND R in gcode line#)
 class Line:
     def __init__(self):
         self.points = []
         self.color = None
         self.dashed = False
         self.type = None
+        self.radius = None
+        self.command = None
 
 
 class GCodeFile(MakesmithInitFuncs):
@@ -75,17 +77,27 @@ class GCodeFile(MakesmithInitFuncs):
             return False
         return True
 
-
-
     def loadUpdateFile(self, gcode=""):
+        print("At loadUpdateFile")
         gcodeLoad = False
         if gcode=="":
             gcodeLoad = True
         if self.data.units == "MM":
             self.canvasScaleFactor = self.MILLIMETERS
+            print("units in mm")
         else:
             self.canvasScaleFactor = self.INCHES
-
+            print("units inches")
+        self.data.clidisplay = self.data.config.getValue("Maslow Settings", "clidisplay")
+        print ("clidisplay is ", self.data.clidisplay)    
+        if (self.data.clidisplay):
+            self.data.gcode_x_min = 2000
+            self.data.gcode_x_max = -2000
+            self.data.gcode_y_min = 1000
+            self.data.gcode_y_max = -1000
+            self.data.gcode_z_min = 20
+            self.data.gcode_z_max = -20
+            print("reset gcode coordinates")
         if gcode == "":
             filename = self.data.gcodeFile.filename
             self.data.gcodeShift[0] = round(float(self.data.config.getValue("Advanced Settings", "homeX")),4)
@@ -110,15 +122,17 @@ class GCodeFile(MakesmithInitFuncs):
             rawfilters = gcode
 
         try:
+         if True:  #this is just for testing R removal
             filtersparsed = rawfilters #get rid of this if above is uncommented)
             '''
             filtersparsed = re.sub(
                 r";([^\n]*)\n", "\n", filtersparsed
             )  # replace standard ; initiated gcode comments with newline
             '''
+            #print(filtersparsed)
             filtersparsed = re.sub(r"\n\n", "\n", filtersparsed)  # removes blank lines
             filtersparsed = re.sub(
-                r"([0-9])([GXYZIJFTM]) *", "\\1 \\2", filtersparsed
+                r"([0-9])([GXYZIJFTMR]) *", "\\1 \\2", filtersparsed
             )  # put spaces between gcodes
             filtersparsed = re.sub(r"  +", " ", filtersparsed)  # condense space runs
             value = self.data.config.getValue("Advanced Settings", "truncate")
@@ -131,35 +145,18 @@ class GCodeFile(MakesmithInitFuncs):
                 self.truncate = int(digits)
             else:
                 self.truncate = -1
-            filtersparsed = re.split(
-                "\n", filtersparsed
-            )  # splits the gcode into elements to be added to the list
+            filtersparsed = re.split("\n", filtersparsed)  # splits the gcode into elements to be added to the list
             filtersparsed = [x.lstrip() for x in filtersparsed] # remove leading spaces
-            filtersparsed = [
-                x + " " for x in filtersparsed
-            ]  # adds a space to the end of each line
+            filtersparsed = [x + " " for x in filtersparsed]  # adds a space to the end of each line
             filtersparsed = [x.replace("X ", "X") for x in filtersparsed]
             filtersparsed = [x.replace("Y ", "Y") for x in filtersparsed]
             filtersparsed = [x.replace("Z ", "Z") for x in filtersparsed]
             filtersparsed = [x.replace("I ", "I") for x in filtersparsed]
             filtersparsed = [x.replace("J ", "J") for x in filtersparsed]
             filtersparsed = [x.replace("F ", "F") for x in filtersparsed]
+            filtersparsed = [x.replace("R ", "R") for x in filtersparsed]
             self.data.gcode = "[]"
             self.data.gcode = filtersparsed
-            '''
-            get max and min drawing locations, then offset from defined home position
-            xmin = []
-            if (self.data.gcodeShift[0] < self.data.gcode_x_min):
-                self.data.gcode_x_min = self.data.gcodeShift[0]
-            if (self.data.gcodeShift[0] > self.data.gcode_x_max):
-                self.data.gcode_x_max = self.data.gcodeShift[0]
-            if (self.data.gcodeShift[0] < self.data.gcode_y_min):
-                self.data.gcode_y_min = self.data.gcodeShift[1]
-            if (self.data.gcodeShift[0] > self.data.gcode_y_max):
-                self.data.gcode_y_max = self.data.gcodeShift[1]
-            '''
-
-
             # Find gcode indicies of z moves
             self.data.zMoves = [0]
             zList = []
@@ -183,6 +180,7 @@ class GCodeFile(MakesmithInitFuncs):
                                 self.data.zMoves.append(index)  # - 1)
                         else:
                             self.data.zMoves.append(index)
+         pass
         except Exception as e:
             self.data.console_queue.put(str(e))
             self.data.console_queue.put("Gcode File Error")
@@ -193,7 +191,55 @@ class GCodeFile(MakesmithInitFuncs):
         self.data.gcodeFile.isChanged = True
         self.data.actions.sendGCodePositionUpdate(self.data.gcodeIndex, recalculate=True)
         return True
-
+      
+    def displayX(self,x):
+        '''
+        get max and min X then offset from defined home position
+        '''
+        newm = x*self.canvasScaleFactor #+ float(self.data.config.getValue("Advanced Settings", "homeX"))
+        bedwidth = round(float(self.data.config.getValue("Maslow Settings", "bedWidth")),4)
+        if (newm > bedwidth):
+            newm = bedwidth
+            print("Off Right")
+        if (newm < (0-bedwidth)):
+            newm = 0 - bedwidth 
+            print("Off Left")   
+        if (newm < self.data.gcode_x_min):
+            self.data.gcode_x_min = newm
+            print("calculating new min X ", newm)
+        if (newm > self.data.gcode_x_max):
+            self.data.gcode_x_max = newm
+            print("calculating new max X ", newm)
+        #print("calculating X ", x)
+        
+    def displayY(self,y):
+        '''
+        check min and max Y values against each Y point for line draw or arc draw
+        '''
+        newm = y*self.canvasScaleFactor #+ float(self.data.config.getValue("Advanced Settings", "homeY"))
+        height = round(float(self.data.config.getValue("Maslow Settings", "bedHeight")),4)
+        if (newm > height):
+            newm = height
+            print("overheight")
+        if (newm < (0-height)):
+            newm = 0 - height
+            print("Underbound")
+        if (newm > self.data.gcode_y_max):
+            self.data.gcode_y_max = newm
+            print("calculating new max Y ", newm)
+        if (newm < self.data.gcode_y_min):
+            self.data.gcode_y_min = newm
+            print("calculating new min Y ", newm)
+    
+    def displayZ(self,z):
+        '''
+        check min and max z values
+        '''
+        if (z < self.data.gcode_z_min):
+            self.data.gcode_z_min = z
+        if (z > self.data.gcode_z_max):
+            self.data.gcode_z_max = z
+            
     def isClose(self, a, b):
         return abs(a - b) <= self.data.tolerance
 
@@ -242,16 +288,24 @@ class GCodeFile(MakesmithInitFuncs):
                 xTarget = float(x.groups()[0]) * self.canvasScaleFactor
                 if self.absoluteFlag == 1:
                     xTarget = self.xPosition + xTarget
+                #print("x ", self.xPosition, " x target ", xTarget)
+                #if (self.data.clidisplay):
+                #    self.displayX(xTarget)
 
             y = re.search("Y(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if y:
                 yTarget = float(y.groups()[0]) * self.canvasScaleFactor
                 if self.absoluteFlag == 1:
                     yTarget = self.yPosition + yTarget
+                #print("y ", self.yPosition, " y Target ", yTarget)
+                #if (self.data.clidisplay):
+                #    self.displayY(yTarget)
+                
             z = re.search("Z(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if z:
                 zTarget = float(z.groups()[0]) * self.canvasScaleFactor
-
+                #if (self.data.clidisplay):
+                #    self.displayZ(zTarget)
             if self.isNotReallyClose(self.xPosition, xTarget) or self.isNotReallyClose(
                 self.yPosition, yTarget
             ):
@@ -261,6 +315,7 @@ class GCodeFile(MakesmithInitFuncs):
 
                     self.line3D.append(Line())  # points = (), width = 1, group = 'gcode')
                     self.line3D[-1].type = "line"
+                    self.line3D[-1].command = None
                     self.line3D[-1].dashed = True
                     self.addPoint3D(self.xPosition, self.yPosition, self.zPosition)
                     self.addPoint3D(xTarget, yTarget, zTarget)
@@ -269,6 +324,7 @@ class GCodeFile(MakesmithInitFuncs):
                     if (len(self.line3D) == 0 or self.line3D[-1].dashed or self.line3D[-1].type != "line"):  #test123
                         self.line3D.append( Line() )
                         self.line3D[-1].type = "line"
+                        self.line3D[-1].command = None
                         self.addPoint3D(self.xPosition, self.yPosition, self.zPosition)
                         self.line3D[-1].dashed = False
 
@@ -288,13 +344,105 @@ class GCodeFile(MakesmithInitFuncs):
 
                     self.line3D.append(Line())  # points = (), width = 1, group = 'gcode')
                     self.line3D[-1].type = "circle"
+                    self.line3D[-1].command = None
                     self.addPoint3D(self.xPosition, self.yPosition, self.zPosition)
-                    self.addPoint3D(radius, 0, zTarget)
+                    self.addPoint3D(radius, 0, zTarget)  #targetOut
                     self.line3D[-1].dashed = False
-
+            #print("cli display",self.data.clidisplay)
+            #if (self.data.clidisplay):
+            #    self.displayX(self.xPosition)
+            #if (self.data.clidisplay):
+            #    self.displayY(self.yPosition)
             self.xPosition = xTarget
             self.yPosition = yTarget
             self.zPosition = zTarget
+
+    def drawMCommand(self, mString):
+        """
+
+        drawToolChange draws a circle indicating a tool change.
+
+        """
+        #print(mString)
+        code = self.getMCommand(mString)
+        #print(code)
+        #code = mString[1:2] #just the number?
+        circleSize = 0
+        arg = 0
+        command = None
+        if code == 3:
+            arg = self.getSpindleSpeed(mString)
+            if arg == 0:
+                circleSize = 5
+                command = "SpindleOff"
+            else:
+                circleSize = 3
+                command = "SpindleOnCW"
+        if code == 4:
+            arg = self.getSpindleSpeed(mString)
+            if arg == 0:
+                circleSize = 5
+                command = "SpindleOff"
+            else:
+                circleSize = 4
+                command = "SpindleOnCCW"
+        if code == 5: # Spindle Stop
+            circleSize = 5
+            command = "SpindleOff"
+        if code == 6:  # Tool Change
+            circleSize = 6
+            command = "ToolChange"
+            arg = self.currentDrawTool
+
+        self.line3D.append(Line())  # points = (), width = 1, group = 'gcode')
+        self.line3D[-1].type = "circle"
+        self.line3D[-1].command = command
+        self.addPoint3D(self.xPosition, self.yPosition, self.zPosition)
+        self.addPoint3D(circleSize, arg, self.zPosition)
+        self.line3D[-1].dashed = False
+
+    def getSpindleSpeed(self, mString):
+        code = mString[mString.find("S")+1:]
+        try:
+            if code!="":
+                return float(code)
+            else:
+                return 0
+        except:
+            return -1
+
+    def getToolNumber(self, mString):
+        code0 = mString.find("T")
+        code1 = mString.find("M")
+        code = mString[code0+1:code1-code0]
+        #print(mString)
+        #print(code)
+        try:
+            if code!="":
+                return int(code)
+            else:
+                return 0
+        except:
+            return -1
+
+    def getMCommand(self, mString):
+        code0 = mString.find("M")
+        code1 = mString.find(" ", code0)
+        if code1 == -1:
+            code1 = mString.find("T", code0)
+            if code1 == -1:
+                code = mString[code0+1:]
+        else:
+            code = mString[code0+1: code1-code0]
+        if code!="":
+            try:
+                code = int(code)
+                return int(code)
+            except:
+                return 0
+        else:
+            return 0
+
 
     def drawArc(self, gCodeLine, command):
         """
@@ -309,25 +457,38 @@ class GCodeFile(MakesmithInitFuncs):
             xTarget = self.xPosition
             yTarget = self.yPosition
             zTarget = self.zPosition
+            rTarget = self.rPosition
             iTarget = 0
             jTarget = 0
 
             x = re.search("X(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if x:
                 xTarget = float(x.groups()[0]) * self.canvasScaleFactor
+                #if (self.data.clidisplay):
+                #    self.displayX(xTarget)
+               
             y = re.search("Y(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if y:
                 yTarget = float(y.groups()[0]) * self.canvasScaleFactor
+                #if (self.data.clidisplay):
+                #    self.displayY(yTarget)
+                    
             i = re.search("I(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if i:
                 iTarget = float(i.groups()[0]) * self.canvasScaleFactor
+                
             j = re.search("J(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if j:
                 jTarget = float(j.groups()[0]) * self.canvasScaleFactor
+            r = re.search("R(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
+            if r:
+                # TODO add r functionality for on screen display to go with R firmware upgrade
+                rTarget = float(r.groups()[0]) * self.canvasScaleFactor
             z = re.search("Z(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
             if z:
                 zTarget = float(z.groups()[0]) * self.canvasScaleFactor
-
+            
+             
             radius = math.sqrt(iTarget ** 2 + jTarget ** 2)
             centerX = self.xPosition + iTarget
             centerY = self.yPosition + jTarget
@@ -374,9 +535,7 @@ class GCodeFile(MakesmithInitFuncs):
                 self.addPoint3D(xPosOnLine, yPosOnLine, zPosOnLine)
                 i = i + 0.1 * direction  # this is going to need to be a direction
                 counter+=1
-
             self.addPoint3D(xTarget, yTarget, zTarget)
-
             self.xPosition = xTarget
             self.yPosition = yTarget
             self.zPosition = zTarget
@@ -402,9 +561,6 @@ class GCodeFile(MakesmithInitFuncs):
         self.data.gcode = []
         self.updateGcode()
         self.data.gcodeFile.isChanged = True
-
-
-
 
     def moveLine(self, gCodeLine):
 
@@ -432,7 +588,7 @@ class GCodeFile(MakesmithInitFuncs):
         #This test should always pass so taking it out
         #if gCodeLine.find("(") == -1 and gCodeLine.find(";") == -1:
         if True:
-            #try:
+            try:
                 gCodeLine = gCodeLine.upper() + " "
                 x = re.search("X(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
                 if x:
@@ -446,19 +602,23 @@ class GCodeFile(MakesmithInitFuncs):
 
                     e = re.search(".*e-", q)
 
-                    if e:
-                        fmtX = (
-                            "%0%.%sf" % eNtnX
-                        )  # if e-notation, use the exponent from the e notation
-                    else:
-                        fmtX = "%0%.%sf" % len(
-                            eNtnX
-                        )  # use the number of digits after the decimal place
+                    if (self.data.pythonVersion35 == False):
+                        if e:
+                            fmtX = "%0.{0}f".format(eNtnX)
+                        else:
+                            fmtX = "%0.{0}f".format(len(eNtnX))
+                    else:    #deprecated python 3.6
+                        if e:
+                            fmtX = ("%0%.%sf" % eNtnX)  # if e-notation, use the exponent from the e notation
+                        else:
+                            fmtX = "%0%.%sf" % len(eNtnX)  # use the number of digits after the decimal place
                     gCodeLine = (
                         gCodeLine[0 : x.start() + 1]
                         + (fmtX % (float(x.groups()[0]) + shiftX))
                         + gCodeLine[x.end() :]
                     )
+                    #if (self.data.clidisplay):
+                    #    self.displayX(fmtX % (float(x.groups()[0]) + shiftX))
 
                 y = re.search("Y(?=.)(([ ]*)?[+-]?([0-9]*)(\.([0-9]+))?)", gCodeLine)
                 if y:
@@ -471,24 +631,32 @@ class GCodeFile(MakesmithInitFuncs):
                     eNtnY = re.sub("\-?\d\.|\d*e-", "", q, )
 
                     e = re.search(".*e-", q )
-
-                    if e:
-                        fmtY = "%0%.%sf" % eNtnY
-                    else:
-                        fmtY = "%0%.%sf" % len(eNtnY)
+                    if (self.data.pythonVersion35 == False):
+                        if e:
+                            fmtY = "%0.{0}f".format(eNtnY)
+                        else:
+                            fmtY = "%0.{0}f".format(len(eNtnY))
+                    else:    #deprecated python 3.6
+                        if e:
+                            fmtY = ("%0%.%sf" % eNtnY)  # if e-notation, use the exponent from the e notation
+                        else:
+                            fmtY = "%0%.%sf" % len(eNtnY)  # use the number of digits after the decimal place                  
                     gCodeLine = (
                         gCodeLine[0 : y.start() + 1]
                         + (fmtY % (float(y.groups()[0]) + shiftY))
                         + gCodeLine[y.end() :]
                     )
+                    #if (self.data.clidisplay):
+                    #    self.displayY(fmtY % (float(y.groups()[0]) + shiftY))
                 #now, put any comment back.
                 gCodeLine = gCodeLine+comment
                 return gCodeLine
-            #except ValueError:
-            #    self.data.console_queue.put("line could not be moved:")
-            #    self.data.console_queue.put(originalLine)
-            #    return originalLine
-        #return originalLine
+            except ValueError:
+                self.data.console_queue.put("line could not be moved:")
+                print(originalLine)
+                self.data.console_queue.put(originalLine)
+                return originalLine
+        return originalLine
 
     def loadNextLine(self):
         """
@@ -591,6 +759,16 @@ class GCodeFile(MakesmithInitFuncs):
 
         if gString == "G91":
             self.absoluteFlag = 1
+
+        #tString = fullString[fullString.find("T") : fullString.find("T") + 2]
+        tString = fullString[fullString.find("T") :]
+        if tString.find("T") != -1:
+            self.currentDrawTool = self.getToolNumber(tString)
+
+        mString = fullString[fullString.find("M") : ]
+        if mString.find("M") != -1:
+            self.drawMCommand(mString)
+
 
     def callBackMechanism(self):
         """
