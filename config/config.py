@@ -728,7 +728,7 @@ class Config(MakesmithInitFuncs):
         if hasattr(sys, '_MEIPASS'):
             home = os.path.join(sys._MEIPASS)
             print(self.home)
-        path = home+"/firmware/madgrizzle/*.hex"
+        path = home+"/firmware/beta/*.hex"
         for filename in glob.glob(path):
             version = filename.split("-")
             maxIndex = len(version)-1
@@ -737,7 +737,7 @@ class Config(MakesmithInitFuncs):
                 self.data.customFirmwareVersion = version[0]
             else:
                 self.data.customFirmwareVersion = "n/a"
-        path = home+"/firmware/maslowcnc/*.hex"
+        path = home+"/firmware/webcontrolcnc/*.hex"
         for filename in glob.glob(path):
             version = filename.split("-")
             maxIndex = len(version)-1

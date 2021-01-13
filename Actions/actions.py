@@ -1436,7 +1436,7 @@ class Actions(MakesmithInitFuncs):
                 path = home+"/firmware/beta/*.hex"
             if version == 1:
                 self.data.ui_queue1.put("SpinnerMessage", "", "Stock Firmware Update in Progress, Please Wait.")
-                path = home+"/firmware/maslowcnc/*.hex"
+                path = home+"/firmware/webcontrolcnc/*.hex"
             if version == 2:
                 self.data.ui_queue1.put("SpinnerMessage", "", "Holey Firmware Update in Progress, Please Wait.")
                 path = home+"/firmware/holey/*.hex"
